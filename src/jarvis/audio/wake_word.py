@@ -128,7 +128,8 @@ class WakeWordDetector:
         self._accumulator = self._accumulator[frame_bytes:]
 
         frame_int16 = np.frombuffer(frame_data, dtype=np.int16)
-        return self._model.predict(frame_int16)
+        result: dict[str, float] = self._model.predict(frame_int16)
+        return result
 
     def process_frame_float(self, audio: NDArray[np.float32]) -> dict[str, float]:
         """Process float32 audio array by converting to int16 PCM bytes first.

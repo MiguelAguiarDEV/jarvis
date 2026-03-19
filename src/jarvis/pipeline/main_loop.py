@@ -33,7 +33,7 @@ from jarvis.audio.playback import AudioPlayback
 from jarvis.audio.vad import VoiceActivityDetector
 from jarvis.audio.wake_word import WakeWordDetector
 from jarvis.config import JarvisSettings  # noqa: TC001
-from jarvis.llm.base import LLMMessage, LLMResponse
+from jarvis.llm.base import LLMMessage, LLMProvider, LLMResponse
 from jarvis.llm.chatgpt_provider import ChatGPTProvider
 from jarvis.llm.claude_provider import ClaudeProvider
 from jarvis.llm.qwen_provider import QwenProvider
@@ -182,7 +182,7 @@ class JarvisPipeline:
 
     def _create_llm_router(self) -> LLMRouter:
         """Create LLM router with configured providers."""
-        providers: dict[str, ClaudeProvider | ChatGPTProvider | QwenProvider] = {}
+        providers: dict[str, LLMProvider] = {}
 
         if self._settings.claude_token:
             providers["claude"] = ClaudeProvider(api_key=self._settings.claude_token)

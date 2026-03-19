@@ -176,7 +176,8 @@ class KokoroTTS:
             msg = "Model not loaded"
             raise TTSError(msg)
 
-        return self._kokoro.create(text, voice=voice, speed=speed, lang=lang)
+        result: tuple[Any, int] = self._kokoro.create(text, voice=voice, speed=speed, lang=lang)
+        return result
 
     async def synthesize_stream(
         self,
@@ -234,7 +235,8 @@ class KokoroTTS:
             msg = "TTS model not loaded. Call load() first."
             raise TTSError(msg)
 
-        return self._kokoro.get_voices()
+        voices: list[str] = self._kokoro.get_voices()
+        return voices
 
     async def unload(self) -> None:
         """Unload model to free memory."""

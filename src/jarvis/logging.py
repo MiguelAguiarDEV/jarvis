@@ -73,8 +73,8 @@ def configure_logging(level: str = "INFO", json_output: bool = False) -> None:
 
     shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
-        _filter_sensitive,
-        _add_context,
+        _filter_sensitive,  # type: ignore[list-item]
+        _add_context,  # type: ignore[list-item]
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
@@ -127,7 +127,7 @@ class PipelineTimer:
             await self._log.aerror(
                 f"{self._stage}.error",
                 elapsed_ms=round(elapsed * 1000, 1),
-                error_type=exc[0].__name__ if exc[0] else None,
+                error_type=getattr(exc[0], "__name__", str(exc[0])) if exc[0] else None,
                 **self._extra,
             )
         else:
