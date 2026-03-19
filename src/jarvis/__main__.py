@@ -7,7 +7,10 @@ import sys
 
 import structlog
 
+from jarvis import __version__
 from jarvis.config import JarvisSettings
+from jarvis.logging import configure_logging
+from jarvis.pipeline.main_loop import JarvisPipeline
 
 log = structlog.get_logger()
 
@@ -15,35 +18,45 @@ log = structlog.get_logger()
 async def main() -> None:
     """Initialize and run JARVIS."""
     settings = JarvisSettings()
+    configure_logging(level=settings.log_level)
 
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(structlog, settings.log_level.upper(), structlog.INFO)  # type: ignore[arg-type]
-        ),
+    log.info(
+        "jarvis.starting",
+        version=__version__,
+        llm_preferred=settings.llm_preferred,
+        stt_device=settings.stt_device,
+        tts_voice=settings.tts_voice,
+        wake_word=settings.wake_word,
     )
 
-    log.info("jarvis.starting", version="0.1.0", llm_preferred=settings.llm_preferred)
+    pipeline = JarvisPipeline(settings)
 
-    # Phase 1: placeholder — will be replaced by JarvisPipeline in Milestone 5
-    log.info("jarvis.ready", message="JARVIS is ready. Pipeline not yet implemented.")
+    # Register signal handlers for graceful shutdown
+    loop = asyncio.get_running_loop()
 
-    # Keep alive until interrupted
-    stop_event = asyncio.Event()
+    _shutdown_task: asyncio.Task[None] | None = None
 
     def _signal_handler() -> None:
+        nonlocal _shutdown_task
         log.info("jarvis.shutdown_requested")
-        stop_event.set()
+        _shutdown_task = asyncio.ensure_future(pipeline.shutdown())
 
-    loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         with contextlib.suppress(NotImplementedError):
-            # Windows doesn't support add_signal_handler for SIGTERM
             loop.add_signal_handler(sig, _signal_handler)
 
-    with contextlib.suppress(KeyboardInterrupt):
-        await stop_event.wait()
-
-    log.info("jarvis.stopped")
+    try:
+        await pipeline.initialize()
+        log.info("jarvis.ready", message="Say the wake word to begin.")
+        await pipeline.run()
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        log.exception("jarvis.fatal_error")
+        sys.exit(1)
+    finally:
+        await pipeline.shutdown()
+        log.info("jarvis.stopped")
 
 
 def run() -> None:
