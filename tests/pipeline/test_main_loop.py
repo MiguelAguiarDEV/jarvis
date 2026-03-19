@@ -121,8 +121,10 @@ class TestJarvisPipeline:
         )
         pipeline._tool_router = mock_tool_router
 
-        result = await pipeline._think("What time is it?")
-        assert result == "The current time is 14:30:00."
+        text, provider, _model, tool_names = await pipeline._think("What time is it?")
+        assert text == "The current time is 14:30:00."
+        assert provider == "qwen"
+        assert "system_info" in tool_names
         assert mock_router.complete.call_count == 2
         mock_tool_router.execute.assert_called_once_with("system_info", {"fields": ["time"]})
 
@@ -149,8 +151,10 @@ class TestJarvisPipeline:
         mock_tool_router.get_definitions.return_value = []
         pipeline._tool_router = mock_tool_router
 
-        result = await pipeline._think("Hello")
-        assert result == "Hello! How can I help?"
+        text, provider, _model, tool_names = await pipeline._think("Hello")
+        assert text == "Hello! How can I help?"
+        assert provider == "qwen"
+        assert tool_names == []
 
     @pytest.mark.asyncio
     async def test_speak_synthesizes_and_plays(self) -> None:

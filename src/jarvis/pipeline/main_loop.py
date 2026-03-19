@@ -1,19 +1,6 @@
 """Main async orchestration pipeline for JARVIS.
 
 State machine: IDLE → LISTENING → TRANSCRIBING → THINKING → SPEAKING → IDLE
-
-Flow:
-1. Capture audio chunks (32ms)
-2. Feed to wake word detector (accumulates to 80ms)
-3. On wake detection → transition to LISTENING
-4. Feed chunks to VAD
-5. On speech_end → transition to TRANSCRIBING
-6. Load STT → transcribe → unload STT
-7. Send text to LLM Router with tool definitions
-8. If tool_calls → execute via Tool Router → send results back to LLM
-9. Send final LLM text to TTS
-10. Stream TTS audio to playback
-11. Return to IDLE
 """
 
 from __future__ import annotations
@@ -23,7 +10,10 @@ import json
 import time
 import uuid
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 import numpy as np  # noqa: TC002
 import structlog
@@ -80,10 +70,15 @@ class JarvisPipeline:
     run in the default executor (ThreadPoolExecutor).
     """
 
-    def __init__(self, settings: JarvisSettings) -> None:
+    def __init__(
+        self,
+        settings: JarvisSettings,
+        event_callback: Callable[..., Any] | None = None,
+    ) -> None:
         self._settings = settings
         self._state = PipelineState.IDLE
         self._shutdown_event = asyncio.Event()
+        self._event_callback = event_callback
 
         # Components — initialized in initialize()
         self._capture: AudioCapture | None = None
@@ -99,11 +94,20 @@ class JarvisPipeline:
     def state(self) -> PipelineState:
         return self._state
 
+    def _emit(self, event_type: str, **kwargs: Any) -> None:
+        """Emit event to callback if registered."""
+        if self._event_callback is not None:
+            try:
+                self._event_callback(event_type, **kwargs)
+            except Exception:
+                log.exception("pipeline.event_callback_error", event_type=event_type)
+
     def _set_state(self, state: PipelineState) -> None:
         old = self._state
         self._state = state
         pipeline_state_var.set(state.value)
         log.info("pipeline.state_change", old=old.value, new=state.value)
+        self._emit("state_change", old=old, new=state, request_id=request_id_var.get())
 
     async def initialize(self) -> None:
         """Load all components. Called once at startup.
@@ -179,6 +183,11 @@ class JarvisPipeline:
             tools=self._tool_router.tool_count,
             llm_preferred=self._settings.llm_preferred,
         )
+        self._emit(
+            "ready",
+            provider_health=health,
+            tool_count=self._tool_router.tool_count,
+        )
 
     def _create_llm_router(self) -> LLMRouter:
         """Create LLM router with configured providers."""
@@ -253,6 +262,7 @@ class JarvisPipeline:
         )
         self._wake_word.reset()
 
+        conversation_start = time.perf_counter()
         try:
             # Listen for speech
             audio = await self._listen_for_speech()
@@ -269,7 +279,7 @@ class JarvisPipeline:
                 return
 
             # Think (LLM + tools)
-            response_text = await self._think(text)
+            response_text, provider, model, tool_names = await self._think(text)
             if not response_text:
                 log.warning("pipeline.empty_response")
                 self._set_state(PipelineState.IDLE)
@@ -278,8 +288,22 @@ class JarvisPipeline:
             # Speak
             await self._speak(response_text)
 
+            # Emit conversation complete
+            elapsed_ms = (time.perf_counter() - conversation_start) * 1000
+            self._emit(
+                "conversation_complete",
+                user_text=text,
+                response_text=response_text,
+                provider=provider,
+                model=model,
+                elapsed_ms=round(elapsed_ms, 1),
+                tool_names=tool_names,
+                request_id=request_id,
+            )
+
         except Exception:
             log.exception("pipeline.conversation_error")
+            self._emit("error", error="Conversation failed", stage="conversation")
         finally:
             self._set_state(PipelineState.IDLE)
             request_id_var.set("")
@@ -348,10 +372,14 @@ class JarvisPipeline:
         )
         return result.text
 
-    async def _think(self, user_text: str) -> str | None:
-        """LLM: send text → handle tool calls → return final response."""
+    async def _think(self, user_text: str) -> tuple[str | None, str, str, list[str]]:
+        """LLM: send text → handle tool calls → return final response.
+
+        Returns:
+            Tuple of (response_text, provider, model, tool_names_used).
+        """
         if self._llm_router is None or self._tool_router is None:
-            return None
+            return None, "", "", []
 
         self._set_state(PipelineState.THINKING)
 
@@ -359,6 +387,7 @@ class JarvisPipeline:
             LLMMessage(role="user", content=user_text),
         ]
         tool_defs = self._tool_router.get_definitions()
+        tool_names_used: list[str] = []
 
         async with PipelineTimer("llm.complete", user_text_length=len(user_text)):
             response = await self._llm_router.complete(
@@ -379,9 +408,15 @@ class JarvisPipeline:
 
         # Handle tool call loop
         if response.tool_calls:
+            tool_names_used = [tc.name for tc in response.tool_calls]
             response = await self._tool_loop(messages, response, tool_defs)
+            # Collect all tool names from subsequent iterations
+            for msg in messages:
+                for tc in msg.tool_calls:
+                    if tc.name not in tool_names_used:
+                        tool_names_used.append(tc.name)
 
-        return response.content
+        return response.content, response.provider, response.model, tool_names_used
 
     async def _tool_loop(
         self,

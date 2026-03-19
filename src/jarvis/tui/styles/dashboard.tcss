@@ -1,0 +1,71 @@
+/* JARVIS Dashboard Styles */
+
+Screen {
+    background: $surface;
+}
+
+#status-bar {
+    dock: top;
+    height: 3;
+    background: $primary-background;
+    color: $text;
+    padding: 0 2;
+    content-align: center middle;
+}
+
+#main-content {
+    layout: horizontal;
+    height: 1fr;
+    padding: 1;
+}
+
+#left-panel {
+    width: 1fr;
+    max-width: 40;
+    height: 100%;
+}
+
+#right-panel {
+    width: 2fr;
+    height: 100%;
+    margin-left: 1;
+}
+
+.panel-box {
+    border: solid $primary;
+    height: auto;
+    max-height: 12;
+    margin-bottom: 1;
+    padding: 1;
+}
+
+.panel-title {
+    text-style: bold;
+    color: $accent;
+}
+
+#activity-log {
+    border: solid $primary;
+    height: 1fr;
+    padding: 1;
+}
+
+.activity-entry {
+    height: 1;
+}
+
+.status-healthy {
+    color: $success;
+}
+
+.status-offline {
+    color: $error;
+}
+
+.status-idle {
+    color: $text-muted;
+}
+
+Footer {
+    dock: bottom;
+}
