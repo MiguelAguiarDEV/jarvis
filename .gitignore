@@ -36,6 +36,10 @@ models/*.ct2
 .coverage
 htmlcov/
 .mypy_cache/
+.ruff_cache/
+
+# Model caches
+models/.cache/
 
 # OS
 .DS_Store

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,7 +25,7 @@ class JarvisSettings(BaseSettings):
 
     # --- LLM ---
     llm_preferred: Literal["claude", "chatgpt", "qwen"] = "claude"
-    claude_token: str = ""
+    claude_token: SecretStr = SecretStr("")
     openai_client_id: str = ""
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen3.5:9b"
@@ -53,8 +53,8 @@ class JarvisSettings(BaseSettings):
     log_level: str = "INFO"
 
     # --- OAuth tokens (managed by auth flow, not user-edited) ---
-    openai_access_token: str = ""
-    openai_refresh_token: str = ""
+    openai_access_token: SecretStr = SecretStr("")
+    openai_refresh_token: SecretStr = SecretStr("")
 
     @field_validator("log_level")
     @classmethod

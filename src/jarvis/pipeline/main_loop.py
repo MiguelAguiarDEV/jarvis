@@ -193,12 +193,16 @@ class JarvisPipeline:
         """Create LLM router with configured providers."""
         providers: dict[str, LLMProvider] = {}
 
-        if self._settings.claude_token:
-            providers["claude"] = ClaudeProvider(api_key=self._settings.claude_token)
+        if self._settings.claude_token.get_secret_value():
+            providers["claude"] = ClaudeProvider(
+                api_key=self._settings.claude_token.get_secret_value()
+            )
             log.info("pipeline.llm_provider_configured", provider="claude")
 
-        if self._settings.openai_access_token:
-            providers["chatgpt"] = ChatGPTProvider(access_token=self._settings.openai_access_token)
+        if self._settings.openai_access_token.get_secret_value():
+            providers["chatgpt"] = ChatGPTProvider(
+                access_token=self._settings.openai_access_token.get_secret_value()
+            )
             log.info("pipeline.llm_provider_configured", provider="chatgpt")
 
         providers["qwen"] = QwenProvider(

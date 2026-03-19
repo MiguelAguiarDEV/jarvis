@@ -31,8 +31,7 @@ def update_env(key: str, value: str, path: Path = DEFAULT_ENV_PATH) -> None:
         value: Value to set.
         path: Path to .env file.
     """
-    if not path.exists():
-        path.touch()
+    _ensure_env_file(path)
     set_key(str(path), key, value)
 
 
@@ -46,7 +45,12 @@ def write_env(config: dict[str, str], path: Path = DEFAULT_ENV_PATH) -> None:
         config: Dict of env var names to values.
         path: Path to .env file.
     """
-    if not path.exists():
-        path.touch()
+    _ensure_env_file(path)
     for key, value in config.items():
         set_key(str(path), key, value)
+
+
+def _ensure_env_file(path: Path) -> None:
+    """Create .env file with restrictive permissions if it doesn't exist."""
+    if not path.exists():
+        path.touch(mode=0o600)

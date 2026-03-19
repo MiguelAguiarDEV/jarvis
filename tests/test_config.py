@@ -101,12 +101,22 @@ class TestJarvisSettings:
         assert settings.tts_model_resolved.is_absolute()
         assert settings.tts_voices_resolved.is_absolute()
 
-    def test_credentials_not_empty_by_default(self) -> None:
-        """Credential fields default to empty strings (not None)."""
+    def test_credentials_default_to_empty(self) -> None:
+        """Credential fields default to empty SecretStr (not None)."""
         with patch.dict(os.environ, {}, clear=True):
             settings = JarvisSettings(_env_file=None)  # type: ignore[call-arg]
 
-        assert settings.claude_token == ""
+        assert settings.claude_token.get_secret_value() == ""
         assert settings.openai_client_id == ""
-        assert settings.openai_access_token == ""
-        assert settings.openai_refresh_token == ""
+        assert settings.openai_access_token.get_secret_value() == ""
+        assert settings.openai_refresh_token.get_secret_value() == ""
+
+    def test_secret_str_not_leaked_in_repr(self) -> None:
+        """SecretStr fields show '**********' in repr, not actual values."""
+        env = {"JARVIS_CLAUDE_TOKEN": "super-secret-token"}
+        with patch.dict(os.environ, env, clear=True):
+            settings = JarvisSettings(_env_file=None)  # type: ignore[call-arg]
+
+        settings_repr = repr(settings)
+        assert "super-secret-token" not in settings_repr
+        assert "**********" in settings_repr
