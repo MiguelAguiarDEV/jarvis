@@ -65,6 +65,15 @@ class PipelineErrorMessage(Message):
         self.timestamp = time.time()
 
 
+class InitProgressMessage(Message):
+    """Posted during pipeline initialization to show loading progress."""
+
+    def __init__(self, component: str, status: str) -> None:
+        super().__init__()
+        self.component = component
+        self.status = status  # "loading", "ok", "failed", "skipped"
+
+
 class PipelineReadyMessage(Message):
     """Posted when pipeline finishes initialization."""
 
@@ -152,6 +161,14 @@ class PipelineEventBridge:
                 PipelineErrorMessage(
                     error=str(kwargs.get("error", "Unknown error")),
                     stage=str(kwargs.get("stage", "unknown")),
+                )
+            )
+
+        elif event_type == "init_progress":
+            self._app.post_message(
+                InitProgressMessage(
+                    component=str(kwargs.get("component", "")),
+                    status=str(kwargs.get("status", "")),
                 )
             )
 

@@ -123,7 +123,7 @@ class JarvisPipeline:
         log.info("pipeline.initializing")
         start = time.perf_counter()
 
-        # Create components
+        # Create components (instant, no I/O)
         self._capture = AudioCapture(chunk_ms=32)
         self._playback = AudioPlayback(sample_rate=24_000)
         self._wake_word = WakeWordDetector(
@@ -146,34 +146,24 @@ class JarvisPipeline:
             default_speed=self._settings.tts_speed,
         )
 
-        # Setup LLM providers
+        # Setup LLM providers + tools (instant)
         self._llm_router = self._create_llm_router()
-
-        # Setup tools
         self._tool_router = ToolRouter()
         self._tool_router.register(SystemInfoTool())
 
-        # Load models in parallel
-        load_tasks = [
-            self._wake_word.load(),
-            self._vad.load(),
-            self._tts.load(),
-        ]
-        results = await asyncio.gather(*load_tasks, return_exceptions=True)
-
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                component = ["wake_word", "vad", "tts"][i]
-                log.error("pipeline.component_load_failed", component=component, error=str(result))
-                raise result
-
-        # Start audio I/O
-        await self._capture.start()
-        await self._playback.start()
+        # Load components one by one with progress events
+        await self._init_component("Wake Word", self._wake_word.load)
+        await self._init_component("VAD", self._vad.load)
+        await self._init_component("TTS", self._tts.load)
+        await self._init_component("Microphone", self._capture.start)
+        await self._init_component("Speaker", self._playback.start)
 
         # Health check LLM providers
+        self._emit("init_progress", component="LLM Providers", status="loading")
         health = await self._llm_router.health_check()
         for provider, healthy in health.items():
+            status = "ok" if healthy else "offline"
+            self._emit("init_progress", component=f"  {provider}", status=status)
             log.info("pipeline.llm_health", provider=provider, healthy=healthy)
 
         elapsed = time.perf_counter() - start
@@ -188,6 +178,17 @@ class JarvisPipeline:
             provider_health=health,
             tool_count=self._tool_router.tool_count,
         )
+
+    async def _init_component(self, name: str, load_fn: Any) -> None:
+        """Load a single component with progress events."""
+        self._emit("init_progress", component=name, status="loading")
+        try:
+            await load_fn()
+            self._emit("init_progress", component=name, status="ok")
+        except Exception as e:
+            self._emit("init_progress", component=name, status="failed")
+            log.error("pipeline.component_load_failed", component=name, error=str(e))
+            raise
 
     def _create_llm_router(self) -> LLMRouter:
         """Create LLM router with configured providers."""

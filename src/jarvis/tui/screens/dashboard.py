@@ -14,6 +14,7 @@ from textual.widgets import Footer, Header, Label, RichLog, Static
 
 from jarvis.tui.events import (  # noqa: TC001
     ConversationMessage,
+    InitProgressMessage,
     PipelineErrorMessage,
     PipelineReadyMessage,
     StateChangedMessage,
@@ -44,6 +45,7 @@ class StatusBar(Static):
 
         state_icon = {
             "idle": "[dim]●[/dim]",
+            "loading": "[yellow]⟳[/yellow]",
             "listening": "[green]●[/green]",
             "transcribing": "[yellow]●[/yellow]",
             "thinking": "[blue]●[/blue]",
@@ -140,9 +142,30 @@ class DashboardScreen(Screen[None]):
         status_bar = self.query_one("#status-bar", StatusBar)
         status_bar.state = message.new_state
 
+    def on_init_progress_message(self, message: InitProgressMessage) -> None:
+        activity_log = self.query_one("#activity-log", ActivityLog)
+        status_bar = self.query_one("#status-bar", StatusBar)
+        status_bar.state = "loading"
+
+        icon = {
+            "loading": "[yellow]⟳[/yellow]",
+            "ok": "[green]✓[/green]",
+            "failed": "[red]✗[/red]",
+            "offline": "[dim]○[/dim]",
+            "skipped": "[dim]-[/dim]",
+        }.get(message.status, "○")
+
+        activity_log.write(f"  {icon} {message.component}")
+
     def on_pipeline_ready_message(self, message: PipelineReadyMessage) -> None:
         provider_panel = self.query_one("#provider-panel", ProviderPanel)
         provider_panel.update_health(message.provider_health)
+        activity_log = self.query_one("#activity-log", ActivityLog)
+        activity_log.write(
+            "\n[bold green]Pipeline ready. Say 'Hey Jarvis' to begin.[/bold green]\n"
+        )
+        status_bar = self.query_one("#status-bar", StatusBar)
+        status_bar.state = "idle"
 
     def on_conversation_message(self, message: ConversationMessage) -> None:
         activity_log = self.query_one("#activity-log", ActivityLog)
