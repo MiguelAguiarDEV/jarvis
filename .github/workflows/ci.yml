@@ -33,4 +33,10 @@ jobs:
           python-version: "3.12"
       - run: uv sync --extra dev
       - name: Run tests with coverage
-        run: uv run pytest --cov=jarvis --cov-report=term-missing --cov-report=xml -v
+        run: >
+          uv run pytest
+          --cov=jarvis
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=85
+          -v

@@ -105,8 +105,15 @@ ignore_missing_imports = true
 source = ["jarvis"]
 omit = [
     "tests/*",
-    "src/jarvis/__main__.py",          # Entry point, tested via integration
-    "src/jarvis/llm/auth/oauth_pkce.py",  # Requires browser, tested via integration
+    "src/jarvis/__main__.py",              # Entry point routing
+    "src/jarvis/llm/auth/oauth_pkce.py",   # Requires browser
+    "src/jarvis/tui/app.py",               # Textual app, requires terminal
+    "src/jarvis/tui/headless.py",          # Entry point, tested via integration
+    "src/jarvis/tui/screens/*.py",         # Textual screens, require terminal
+    "src/jarvis/setup/app.py",             # Textual app, requires terminal
+    "src/jarvis/setup/screens/*.py",       # Textual screens, require terminal
+    "src/jarvis/setup/installers.py",      # Network downloads, tested via integration
+    "src/jarvis/setup/detectors.py",       # System detection, requires real hardware
 ]
 
 [tool.coverage.report]

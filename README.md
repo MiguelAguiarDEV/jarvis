@@ -56,20 +56,14 @@ cd jarvis
 uv sync --extra dev          # Dev tools (pytest, ruff, mypy)
 uv sync --extra audio        # PyAudio (requires portaudio system library)
 
-# Download TTS models (~340MB total)
-curl -L -o models/kokoro-v1.0.onnx \
-  https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
-curl -L -o models/voices-v1.0.bin \
-  https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+# Run the setup wizard (downloads models, configures providers)
+uv run python -m jarvis setup
 
-# Configure
-cp .env.example .env
-# Edit .env with your credentials (Claude token, etc.)
+# Or manual setup:
+# cp .env.example .env && edit .env
+# uv run python scripts/smoke_test.py
 
-# Verify components work
-uv run python scripts/smoke_test.py
-
-# Run JARVIS
+# Run JARVIS (TUI dashboard)
 uv run python -m jarvis
 ```
 
@@ -78,7 +72,7 @@ uv run python -m jarvis
 Development from WSL, execution on Windows native.
 
 ```bash
-# Run tests (211 tests, ~5s)
+# Run tests (248 tests, ~5s)
 uv run pytest -v
 
 # Run tests with coverage
@@ -95,36 +89,53 @@ uv run mypy src/
 uv run python scripts/smoke_test.py
 ```
 
+## Modes of Operation
+
+| Command | Mode | Description |
+|---------|------|-------------|
+| `python -m jarvis` | Dashboard TUI | Full-screen dashboard with live status, logs, settings |
+| `python -m jarvis setup` | Setup Wizard | Interactive first-run configuration |
+| `python -m jarvis --headless` | Voice Only | No TUI, voice pipeline only (for services/daemons) |
+
+### Dashboard Keybindings
+| Key | Action |
+|-----|--------|
+| `S` | Settings — edit configuration |
+| `L` | Logs — live structured log viewer |
+| `T` | Tools — view registered tools |
+| `P` | Providers — LLM health & switching |
+| `Q` | Quit |
+
+### Setup Wizard Flow
+```
+Welcome (system scan) → Models (download) → Providers (auth) → Verify (smoke test) → Complete
+```
+
 ## Project Structure
 
 ```
 src/jarvis/
-├── __main__.py            # Entry point (python -m jarvis)
+├── __main__.py            # CLI routing (dashboard/setup/headless)
 ├── config.py              # Settings via env vars (pydantic-settings)
 ├── logging.py             # Structured logging, sensitive data filtering
-├── audio/
-│   ├── capture.py         # Async mic input (PyAudio)
-│   ├── playback.py        # Async speaker output (PyAudio)
-│   ├── vad.py             # Voice Activity Detection (Silero)
-│   └── wake_word.py       # Wake word detection (openWakeWord)
-├── stt/
-│   └── whisper_stt.py     # STT with VRAM management (faster-whisper)
-├── tts/
-│   └── kokoro_tts.py      # TTS, sync + streaming (Kokoro-82M)
-├── llm/
-│   ├── base.py            # Abstract LLMProvider + data types
-│   ├── claude_provider.py # Anthropic Claude
-│   ├── chatgpt_provider.py# OpenAI ChatGPT
-│   ├── qwen_provider.py   # Qwen via Ollama
-│   ├── router.py          # Fallback chain router
-│   └── auth/
-│       └── oauth_pkce.py  # RFC 7636 PKCE flow
-├── tools/
-│   ├── base.py            # Tool abstractions
-│   ├── system_info.py     # Time, date, OS info tool
-│   └── router.py          # Tool registry + executor
-└── pipeline/
-    └── main_loop.py       # Async state machine orchestrator
+├── audio/                 # Mic capture, speaker playback, VAD, wake word
+├── stt/                   # Speech-to-text (faster-whisper, GPU on-demand)
+├── tts/                   # Text-to-speech (Kokoro-82M, CPU)
+├── llm/                   # Multi-provider LLM abstraction + OAuth PKCE
+├── tools/                 # Tool system (system_info, registry, executor)
+├── pipeline/              # Async state machine orchestrator
+├── tui/                   # Textual dashboard (screens, widgets, events)
+│   ├── app.py             # Main dashboard app
+│   ├── events.py          # Pipeline ↔ TUI event bridge
+│   ├── log_buffer.py      # Ring buffer for log viewer
+│   ├── screens/           # Dashboard, Settings, Logs, Tools, Providers
+│   └── headless.py        # Voice-only mode
+└── setup/                 # Setup wizard
+    ├── app.py             # Wizard app
+    ├── detectors.py       # System detection (Python, CUDA, audio, Ollama)
+    ├── installers.py      # Model downloads with progress
+    ├── env_writer.py      # .env file management
+    └── screens/           # Welcome, Models, Providers, Verify, Complete
 ```
 
 ## Security
