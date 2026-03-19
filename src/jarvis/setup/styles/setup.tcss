@@ -1,0 +1,50 @@
+/* JARVIS Setup Wizard Styles */
+
+Screen {
+    background: $surface;
+}
+
+.wizard-content {
+    padding: 2 4;
+}
+
+.wizard-title {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+.check-item {
+    height: 1;
+    margin-left: 2;
+}
+
+.check-ok {
+    color: $success;
+}
+
+.check-fail {
+    color: $error;
+}
+
+.check-pending {
+    color: $text-muted;
+}
+
+.section-title {
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 1;
+}
+
+#progress-bar {
+    margin: 1 2;
+}
+
+Button {
+    margin-top: 1;
+}
+
+Footer {
+    dock: bottom;
+}

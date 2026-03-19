@@ -1,46 +1,59 @@
 """JARVIS Setup Wizard — Textual application.
 
-Guides first-time setup: hardware detection, model downloads,
+Guides first-time setup: system scan, model downloads,
 LLM provider authentication, and verification.
+
+Flow: Welcome → Models → Providers → Verify → Complete
 """
 
 from __future__ import annotations
 
 from typing import ClassVar
 
-from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Static
+from textual.app import App
+
+from jarvis.setup.screens.complete import CompleteScreen
+from jarvis.setup.screens.models import ModelsScreen
+from jarvis.setup.screens.providers import ProvidersScreen
+from jarvis.setup.screens.verify import VerifyScreen
+from jarvis.setup.screens.welcome import WelcomeScreen
 
 
-class SetupWizard(App[None]):
+class SetupWizard(App[str | None]):
     """Setup wizard TUI application.
 
-    Screens: Welcome → Hardware → Models → Providers → Verify → Complete
+    Screens registered by name for push_screen("name") navigation.
     """
 
     TITLE = "JARVIS Setup"
 
+    SCREENS: ClassVar[dict[str, type]] = {
+        "welcome": WelcomeScreen,
+        "models": ModelsScreen,
+        "providers": ProvidersScreen,
+        "verify": VerifyScreen,
+        "complete": CompleteScreen,
+    }
+
     BINDINGS: ClassVar[list[tuple[str, str, str]]] = [("q", "quit", "Quit")]
 
-    def compose(self) -> ComposeResult:
-        yield Header()
-        yield Static(
-            "\n"
-            "  [bold cyan]Welcome to JARVIS Setup[/bold cyan]\n"
-            "\n"
-            "  This wizard will configure your JARVIS installation.\n"
-            "\n"
-            "  [dim]Setup wizard screens coming in TUI Phase 3.[/dim]\n"
-            "  [dim]Press Q to exit.[/dim]\n",
-            id="welcome",
-        )
-        yield Footer()
+    def on_mount(self) -> None:
+        self.push_screen("welcome")
 
     def action_quit(self) -> None:
         self.exit()
 
 
 def run_setup() -> None:
-    """Entry point for setup wizard."""
+    """Entry point for setup wizard.
+
+    If user clicks "Launch JARVIS" on complete screen,
+    transitions to dashboard mode.
+    """
     app = SetupWizard()
-    app.run()
+    result = app.run()
+
+    if result == "launch":
+        from jarvis.tui.app import run_dashboard
+
+        run_dashboard()
