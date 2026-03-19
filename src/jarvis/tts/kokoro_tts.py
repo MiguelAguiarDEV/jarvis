@@ -103,7 +103,12 @@ class KokoroTTS:
             raise TTSError(msg) from e
 
     def _load_sync(self) -> Any:
-        """Synchronous model load."""
+        """Synchronous model load. Forces CPU execution provider."""
+        import os
+
+        # Force ONNX Runtime to use CPU only (suppress CUDA warnings)
+        os.environ.setdefault("ONNXRUNTIME_EXECUTION_PROVIDERS", "CPUExecutionProvider")
+
         from kokoro_onnx import Kokoro
 
         return Kokoro(self._model_path, self._voices_path)

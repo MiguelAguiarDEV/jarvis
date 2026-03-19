@@ -60,8 +60,8 @@ class StatusBar(Static):
 class ProviderPanel(Static):
     """Shows LLM provider health status."""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)
         self._health: dict[str, bool] = {}
 
     def update_health(self, health: dict[str, bool]) -> None:
@@ -82,8 +82,8 @@ class ProviderPanel(Static):
 class HardwarePanel(Static):
     """Shows hardware status (mic, speaker, GPU, VRAM)."""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)
         self._render_default()
 
     def _render_default(self) -> None:

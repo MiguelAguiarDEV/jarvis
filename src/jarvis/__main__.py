@@ -1,9 +1,10 @@
 """Entry point for `python -m jarvis`.
 
 Modes:
-    jarvis              Launch TUI dashboard (default)
-    jarvis setup        Launch setup wizard
-    jarvis --headless   Voice-only mode (no TUI)
+    jarvis                  Launch TUI dashboard (default)
+    jarvis dashboard / -d   Launch TUI dashboard (explicit)
+    jarvis setup            Launch setup wizard
+    jarvis --headless       Voice-only mode (no TUI)
 """
 
 from __future__ import annotations
@@ -16,19 +17,17 @@ def main() -> None:
     args = sys.argv[1:]
 
     if "setup" in args:
-        # Setup wizard TUI
         from jarvis.setup.app import run_setup
 
         run_setup()
 
     elif "--headless" in args:
-        # Voice-only mode (original behavior)
         from jarvis.tui.headless import run_headless
 
         run_headless()
 
     else:
-        # Default: TUI dashboard
+        # "jarvis", "jarvis dashboard", "jarvis -d" all launch dashboard
         from jarvis.tui.app import run_dashboard
 
         run_dashboard()
