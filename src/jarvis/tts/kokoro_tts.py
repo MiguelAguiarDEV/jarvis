@@ -104,14 +104,14 @@ class KokoroTTS:
 
     def _load_sync(self) -> Any:
         """Synchronous model load. Forces CPU execution provider."""
-        import os
+        import warnings
 
-        # Force ONNX Runtime to use CPU only (suppress CUDA warnings)
-        os.environ.setdefault("ONNXRUNTIME_EXECUTION_PROVIDERS", "CPUExecutionProvider")
+        # Suppress ONNX Runtime CUDA provider warning (we use CPU for TTS)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*CUDAExecutionProvider.*")
+            from kokoro_onnx import Kokoro
 
-        from kokoro_onnx import Kokoro
-
-        return Kokoro(self._model_path, self._voices_path)
+            return Kokoro(self._model_path, self._voices_path)
 
     async def synthesize(
         self,

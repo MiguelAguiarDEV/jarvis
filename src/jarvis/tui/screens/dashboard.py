@@ -60,15 +60,14 @@ class StatusBar(Static):
 class ProviderPanel(Static):
     """Shows LLM provider health status."""
 
+    DEFAULT_CONTENT = "[bold]Providers[/bold]\n  [dim]Waiting for pipeline...[/dim]"
+
     def __init__(self, **kwargs: object) -> None:
-        super().__init__(**kwargs)
+        super().__init__(self.DEFAULT_CONTENT, **kwargs)
         self._health: dict[str, bool] = {}
 
     def update_health(self, health: dict[str, bool]) -> None:
         self._health = health
-        self._render()
-
-    def _render(self) -> None:
         lines = ["[bold]Providers[/bold]"]
         for name, healthy in self._health.items():
             icon = "[green]●[/green]" if healthy else "[red]○[/red]"
@@ -82,18 +81,16 @@ class ProviderPanel(Static):
 class HardwarePanel(Static):
     """Shows hardware status (mic, speaker, GPU, VRAM)."""
 
-    def __init__(self, **kwargs: object) -> None:
-        super().__init__(**kwargs)
-        self._render_default()
+    DEFAULT_CONTENT = (
+        "[bold]Hardware[/bold]\n"
+        "  Mic:     [dim]detecting...[/dim]\n"
+        "  Speaker: [dim]detecting...[/dim]\n"
+        "  GPU:     [dim]detecting...[/dim]\n"
+        "  VRAM:    [dim]N/A[/dim]"
+    )
 
-    def _render_default(self) -> None:
-        self.update(
-            "[bold]Hardware[/bold]\n"
-            "  Mic:     [dim]detecting...[/dim]\n"
-            "  Speaker: [dim]detecting...[/dim]\n"
-            "  GPU:     [dim]detecting...[/dim]\n"
-            "  VRAM:    [dim]N/A[/dim]"
-        )
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(self.DEFAULT_CONTENT, **kwargs)
 
 
 class ActivityLog(RichLog):
