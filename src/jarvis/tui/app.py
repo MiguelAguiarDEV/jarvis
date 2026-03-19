@@ -10,6 +10,7 @@ from jarvis.config import JarvisSettings
 from jarvis.logging import configure_logging
 from jarvis.pipeline.main_loop import JarvisPipeline
 from jarvis.tui.events import PipelineEventBridge
+from jarvis.tui.log_buffer import TUILogBuffer
 from jarvis.tui.screens.dashboard import DashboardScreen
 
 log = structlog.get_logger()
@@ -28,6 +29,7 @@ class JarvisDashboard(App[None]):
     def __init__(self) -> None:
         super().__init__()
         self._settings = JarvisSettings()
+        self._log_buffer = TUILogBuffer(maxlen=1000)
         self._bridge = PipelineEventBridge(self)
         self._pipeline = JarvisPipeline(
             self._settings,

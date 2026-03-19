@@ -120,6 +120,10 @@ class DashboardScreen(Screen[None]):
     CSS_PATH = Path(__file__).parent.parent / "styles" / "dashboard.tcss"
 
     BINDINGS: ClassVar[list[tuple[str, str, str]]] = [
+        ("s", "open_settings", "Settings"),
+        ("l", "open_logs", "Logs"),
+        ("t", "open_tools", "Tools"),
+        ("p", "open_providers", "Providers"),
         ("q", "quit", "Quit"),
     ]
 
@@ -150,6 +154,35 @@ class DashboardScreen(Screen[None]):
     def on_pipeline_error_message(self, message: PipelineErrorMessage) -> None:
         activity_log = self.query_one("#activity-log", ActivityLog)
         activity_log.add_error(message)
+
+    def action_open_settings(self) -> None:
+        from jarvis.tui.screens.settings import SettingsScreen
+
+        self.app.push_screen(SettingsScreen())
+
+    def action_open_logs(self) -> None:
+        from jarvis.tui.screens.logs import LogsScreen
+
+        app = self.app
+        if hasattr(app, "_log_buffer"):
+            self.app.push_screen(LogsScreen(app._log_buffer))
+
+    def action_open_tools(self) -> None:
+        from jarvis.tui.screens.tools import ToolsScreen
+
+        app = self.app
+        if hasattr(app, "_pipeline") and app._pipeline._tool_router:
+            defs = app._pipeline._tool_router.get_definitions()
+            self.app.push_screen(ToolsScreen(defs))
+
+    def action_open_providers(self) -> None:
+        from jarvis.tui.screens.providers import ProvidersScreen
+
+        app = self.app
+        if hasattr(app, "_pipeline") and app._pipeline._llm_router:
+            self.app.push_screen(
+                ProvidersScreen(app._pipeline._llm_router, app._settings.llm_preferred)
+            )
 
     def action_quit(self) -> None:
         self.app.exit()
