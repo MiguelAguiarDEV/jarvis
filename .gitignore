@@ -19,6 +19,7 @@ ENV/
 # Models (user downloads)
 models/*.onnx
 models/*.bin
+models/*.wav
 models/*.pt
 models/*.ct2
 !models/.gitkeep
