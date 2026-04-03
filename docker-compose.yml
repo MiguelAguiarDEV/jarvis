@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     environment:
       MNEMO_JWT_SECRET: ${MNEMO_JWT_SECRET}
-      MNEMO_DATABASE_URL: ${MNEMO_DATABASE_URL}
+      MNEMO_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/engram?sslmode=disable
       DISCORD_BOT_TOKEN: ${DISCORD_TOKEN}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
       JARVIS_DISCORD_ENABLED: ${JARVIS_DISCORD_ENABLED:-false}
