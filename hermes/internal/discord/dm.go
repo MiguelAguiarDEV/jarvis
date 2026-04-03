@@ -28,15 +28,15 @@ type dmConversation struct {
 type DMRouter struct {
 	mu            sync.RWMutex
 	conversations map[string]*dmConversation // channelID -> conversation
-	chatClient    *agent.EngramChatClient
+	chatClient    *agent.MnemoChatClient
 	cfg           *config.Config
 }
 
 // NewDMRouter creates a new DM router.
 func NewDMRouter(cfg *config.Config) *DMRouter {
-	var chatClient *agent.EngramChatClient
-	if cfg.EngramURL != "" && cfg.EngramAPIKey != "" {
-		chatClient = agent.NewEngramChatClient(cfg.EngramURL, cfg.EngramAPIKey)
+	var chatClient *agent.MnemoChatClient
+	if cfg.MnemoURL != "" && cfg.MnemoAPIKey != "" {
+		chatClient = agent.NewMnemoChatClient(cfg.MnemoURL, cfg.MnemoAPIKey)
 	}
 	return &DMRouter{
 		conversations: make(map[string]*dmConversation),
@@ -89,7 +89,7 @@ func (d *DMRouter) HandleDM(s *discordgo.Session, m *discordgo.MessageCreate) bo
 	// Check if chat client is configured.
 	if d.chatClient == nil {
 		observability.Warn(ctx, "dm_chat_unavailable", observability.Fields{"reason": "no_api_key"})
-		_, _ = s.ChannelMessageSend(m.ChannelID, "Chat not configured. Set ENGRAM_API_KEY.")
+		_, _ = s.ChannelMessageSend(m.ChannelID, "Chat not configured. Set MNEMO_API_KEY.")
 		return true
 	}
 
@@ -185,7 +185,7 @@ func (d *DMRouter) relayDM(ctx context.Context, s *discordgo.Session, m *discord
 }
 
 // getOrCreateConversation returns the existing conversation for a DM channel
-// or creates a new one via the engram API.
+// or creates a new one via the mnemo API.
 func (d *DMRouter) getOrCreateConversation(ctx context.Context, channelID, userID string) (*dmConversation, error) {
 	d.mu.RLock()
 	conv, ok := d.conversations[channelID]

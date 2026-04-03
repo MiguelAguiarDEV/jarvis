@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { HudPanel, HexStream, Metric, StatusLine, DataMatrix } from "@/components/hud";
-import type { Task } from "@/lib/engram";
+import type { Task } from "@/lib/mnemo";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

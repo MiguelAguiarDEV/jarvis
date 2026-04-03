@@ -93,4 +93,4 @@ JARVIS (Docker) → host.docker.internal:9876 → PROMETHEUS bridge.js → claud
 | NEXUS | Next.js dashboard | Eyes — visualization, chat UI |
 | HERMES | Discord bot | Messenger — DM routing, notifications |
 | PROMETHEUS | Claude bridge | Fire — LLM access via claude-agent-sdk |
-| ENGRAM | Memory system | Memory — persistent cross-session knowledge |
+| MNEMO | Memory system | Memory — persistent cross-session knowledge |

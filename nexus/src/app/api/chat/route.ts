@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
-const API_URL = process.env.ENGRAM_API_URL!;
-const API_KEY = process.env.ENGRAM_API_KEY!;
+const API_URL = process.env.MNEMO_API_URL!;
+const API_KEY = process.env.MNEMO_API_KEY!;
 
 export async function POST(req: NextRequest) {
   const body = await req.json();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 import fs from "fs";
 import path from "path";
 
@@ -96,7 +96,7 @@ function scanMarkdownFiles(): { nodes: DocNode[]; edges: DocEdge[] } {
       for (const [pattern, project] of FILE_PROJECT_PATTERNS) {
         if (pattern.test(basename)) {
           const projectId = `project:${project}`;
-          // Ensure project node exists (may already come from engram)
+          // Ensure project node exists (may already come from mnemo)
           if (!topicNodes.has(projectId)) {
             topicNodes.add(projectId);
             nodes.push({
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Fetch mnemo graph data
-    const data = await engramFetch<{
+    const data = await mnemoFetch<{
       nodes: DocNode[];
       edges: DocEdge[];
     }>(
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
 
     for (const kbNode of kbData.nodes) {
       if (kbNode.type === "topic") {
-        // Check if engram has a matching topic
+        // Check if mnemo has a matching topic
         const match = mnemoTopics.find(
           (t) => t.label === kbNode.label?.toLowerCase()
         );

@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { HudPanel, HexStream, Metric, StatusLine } from "@/components/hud";
-import type { Conversation, Message } from "@/lib/engram";
-import { streamChat } from "@/lib/engram";
+import type { Conversation, Message } from "@/lib/mnemo";
+import { streamChat } from "@/lib/mnemo";
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {

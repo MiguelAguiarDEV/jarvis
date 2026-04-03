@@ -1,4 +1,4 @@
-import { engramFetch, type TraceStats, type ToolCall } from "@/lib/engram";
+import { mnemoFetch, type TraceStats, type ToolCall } from "@/lib/mnemo";
 import TracesClient from "./traces-client";
 
 export const dynamic = "force-dynamic";
@@ -8,13 +8,13 @@ export default async function TracesPage() {
   const allCalls: ToolCall[] = [];
 
   try {
-    stats = await engramFetch<TraceStats>("/traces/stats");
+    stats = await mnemoFetch<TraceStats>("/traces/stats");
   } catch {}
 
   if (stats?.by_session) {
     for (const s of stats.by_session.slice(0, 10)) {
       try {
-        const res = await engramFetch<{ tool_calls: ToolCall[] }>(
+        const res = await mnemoFetch<{ tool_calls: ToolCall[] }>(
           `/traces/session/${encodeURIComponent(s.session_id)}?limit=100`,
         );
         if (res.tool_calls) allCalls.push(...res.tool_calls);

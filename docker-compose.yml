@@ -32,8 +32,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      ENGRAM_JWT_SECRET: ${ENGRAM_JWT_SECRET}
-      ENGRAM_DATABASE_URL: ${ENGRAM_DATABASE_URL}
+      MNEMO_JWT_SECRET: ${MNEMO_JWT_SECRET}
+      MNEMO_DATABASE_URL: ${MNEMO_DATABASE_URL}
       DISCORD_BOT_TOKEN: ${DISCORD_TOKEN}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
       JARVIS_DISCORD_ENABLED: ${JARVIS_DISCORD_ENABLED:-false}
@@ -75,8 +75,8 @@ services:
       mnemo-cloud:
         condition: service_healthy
     environment:
-      ENGRAM_API_URL: http://mnemo-cloud:8080
-      ENGRAM_API_KEY: ${ENGRAM_API_KEY}
+      MNEMO_API_URL: http://mnemo-cloud:8080
+      MNEMO_API_KEY: ${MNEMO_API_KEY}
       PORT: "3001"
       HOSTNAME: 0.0.0.0
       KB_ROOT: /kb
@@ -113,10 +113,10 @@ services:
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
       ALLOWED_USER_IDS: ${DISCORD_USER_ID}
-      ENGRAM_URL: http://mnemo-cloud:8080
-      ENGRAM_USER: ${ENGRAM_USER}
-      ENGRAM_PASS: ${ENGRAM_PASS}
-      ENGRAM_API_KEY: ${ENGRAM_API_KEY}
+      MNEMO_URL: http://mnemo-cloud:8080
+      MNEMO_USER: ${MNEMO_USER}
+      MNEMO_PASS: ${MNEMO_PASS}
+      MNEMO_API_KEY: ${MNEMO_API_KEY}
       OPENCODE_SERVER_URL: http://host.docker.internal:4096
       OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD}
       SESSION_FILE_PATH: /data/sessions.json

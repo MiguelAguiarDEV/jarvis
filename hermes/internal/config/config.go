@@ -14,10 +14,10 @@ type Config struct {
 	AllowedUserIDs   []string
 	OpenCodeURL      string
 	OpenCodePassword string
-	EngramURL        string
-	EngramUser       string
-	EngramPass       string
-	EngramAPIKey     string
+	MnemoURL        string
+	MnemoUser       string
+	MnemoPass       string
+	MnemoAPIKey     string
 	SessionFilePath  string
 	MetricsAddr      string
 	DiagnosticsDir   string
@@ -40,10 +40,10 @@ func Load() *Config {
 		AllowedUserIDs:   splitCSV(allowedRaw),
 		OpenCodeURL:      strings.TrimRight(os.Getenv("OPENCODE_SERVER_URL"), "/"),
 		OpenCodePassword: os.Getenv("OPENCODE_SERVER_PASSWORD"),
-		EngramURL:        strings.TrimRight(os.Getenv("ENGRAM_URL"), "/"),
-		EngramUser:       os.Getenv("ENGRAM_USER"),
-		EngramPass:       firstNonEmpty(os.Getenv("ENGRAM_PASS"), os.Getenv("ENGRAM_PASSWORD")),
-		EngramAPIKey:     os.Getenv("ENGRAM_API_KEY"),
+		MnemoURL:        strings.TrimRight(os.Getenv("MNEMO_URL"), "/"),
+		MnemoUser:       os.Getenv("MNEMO_USER"),
+		MnemoPass:       firstNonEmpty(os.Getenv("MNEMO_PASS"), os.Getenv("MNEMO_PASSWORD")),
+		MnemoAPIKey:     os.Getenv("MNEMO_API_KEY"),
 		SessionFilePath:  sessionPath,
 		MetricsAddr:      firstNonEmpty(os.Getenv("METRICS_ADDR"), "127.0.0.1:9090"),
 		DiagnosticsDir:   firstNonEmpty(os.Getenv("DIAGNOSTICS_DIR"), "/data/diagnostics"),

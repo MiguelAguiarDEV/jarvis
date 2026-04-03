@@ -14,17 +14,17 @@ import (
 	"jarvis-discord-bot/internal/observability"
 )
 
-// EngramChatClient talks to the mnemo-cloud /api/chat SSE endpoint
+// MnemoChatClient talks to the mnemo-cloud /api/chat SSE endpoint
 // and /api/conversations REST endpoints.
-type EngramChatClient struct {
+type MnemoChatClient struct {
 	BaseURL    string
 	APIKey     string
 	HTTPClient *http.Client
 }
 
-// NewEngramChatClient creates a client for the mnemo chat API.
-func NewEngramChatClient(baseURL, apiKey string) *EngramChatClient {
-	return &EngramChatClient{
+// NewMnemoChatClient creates a client for the mnemo chat API.
+func NewMnemoChatClient(baseURL, apiKey string) *MnemoChatClient {
+	return &MnemoChatClient{
 		BaseURL:    strings.TrimRight(baseURL, "/"),
 		APIKey:     apiKey,
 		HTTPClient: &http.Client{Timeout: 120 * time.Second},
@@ -32,15 +32,15 @@ func NewEngramChatClient(baseURL, apiKey string) *EngramChatClient {
 }
 
 // CreateConversation creates a new conversation and returns its ID.
-func (c *EngramChatClient) CreateConversation(ctx context.Context, title string) (int64, error) {
+func (c *MnemoChatClient) CreateConversation(ctx context.Context, title string) (int64, error) {
 	ctx = observability.WithFields(ctx, observability.Fields{
-		"component": "engram_chat", "operation": "create_conversation",
+		"component": "mnemo_chat", "operation": "create_conversation",
 	})
 	started := time.Now()
 	var opErr error
 	defer func() {
-		observability.ObserveOperation(ctx, "engram_create_conversation", started,
-			map[string]string{"component": "engram_chat"}, opErr)
+		observability.ObserveOperation(ctx, "mnemo_create_conversation", started,
+			map[string]string{"component": "mnemo_chat"}, opErr)
 	}()
 
 	body, _ := json.Marshal(map[string]string{"title": title})
@@ -72,16 +72,16 @@ func (c *EngramChatClient) CreateConversation(ctx context.Context, title string)
 		opErr = fmt.Errorf("decode conversation response: %w", err)
 		return 0, opErr
 	}
-	observability.Info(ctx, "engram_conversation_created", observability.Fields{"conversation_id": result.ID})
+	observability.Info(ctx, "mnemo_conversation_created", observability.Fields{"conversation_id": result.ID})
 	return result.ID, nil
 }
 
 // ChatSSE sends a message to the mnemo chat SSE endpoint and collects
 // the full streamed response. It calls onToken for each token received.
 // Returns the complete assembled response.
-func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, message string, onToken func(string)) (string, error) {
+func (c *MnemoChatClient) ChatSSE(ctx context.Context, conversationID int64, message string, onToken func(string)) (string, error) {
 	ctx = observability.WithFields(ctx, observability.Fields{
-		"component":       "engram_chat",
+		"component":       "mnemo_chat",
 		"operation":       "chat_sse",
 		"conversation_id": conversationID,
 	})
@@ -89,8 +89,8 @@ func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, me
 	started := time.Now()
 	var opErr error
 	defer func() {
-		observability.ObserveOperation(ctx, "engram_chat_sse", started,
-			map[string]string{"component": "engram_chat"}, opErr)
+		observability.ObserveOperation(ctx, "mnemo_chat_sse", started,
+			map[string]string{"component": "mnemo_chat"}, opErr)
 	}()
 
 	body, _ := json.Marshal(map[string]any{
@@ -109,7 +109,7 @@ func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, me
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 
-	observability.Info(ctx, "engram_chat_request_start", nil)
+	observability.Info(ctx, "mnemo_chat_request_start", nil)
 	resp, err := sseClient.Do(req)
 	if err != nil {
 		opErr = fmt.Errorf("mnemo chat: %w", err)
@@ -164,7 +164,7 @@ func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, me
 	}
 
 	result := sb.String()
-	observability.Info(ctx, "engram_chat_completed", observability.Fields{
+	observability.Info(ctx, "mnemo_chat_completed", observability.Fields{
 		"response_length": len(result),
 		"elapsed_ms":      time.Since(started).Milliseconds(),
 	})

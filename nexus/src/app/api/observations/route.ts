@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = process.env.ENGRAM_API_URL!;
-const API_KEY = process.env.ENGRAM_API_KEY!;
+const API_URL = process.env.MNEMO_API_URL!;
+const API_KEY = process.env.MNEMO_API_KEY!;
 
 /**
  * GET /api/observations?q=<search>&type=<filter>&project=<filter>&limit=<n>

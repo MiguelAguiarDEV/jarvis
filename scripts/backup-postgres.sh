@@ -1,7 +1,7 @@
 #!/bin/bash
 # JARVIS Postgres Backup
 # Runs pg_dumpall from the postgres container, compresses, rotates.
-# Backs up ALL databases (engram + postgres) so nothing is missed.
+# Backs up ALL databases (mnemo + postgres) so nothing is missed.
 
 set -euo pipefail
 

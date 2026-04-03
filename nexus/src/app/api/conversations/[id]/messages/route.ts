@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function GET(
   _req: NextRequest,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const data = await engramFetch<unknown>(`/api/conversations/${id}/messages`);
+    const data = await mnemoFetch<unknown>(`/api/conversations/${id}/messages`);
     // Normalize: mnemo may return [...] or { messages: [...] }
     let messages: unknown[];
     if (Array.isArray(data)) {

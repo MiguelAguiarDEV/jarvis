@@ -4,32 +4,36 @@ description: "Auto-generated server state: system info, Docker services, network
 always: true
 ---
 # Server Knowledge (auto-generated)
-> Last scan: 2026-04-03 08:00:01 UTC
+> Last scan: 2026-04-03 16:00:01 UTC
 
 ## System Info
 - Hostname: jarvis
 - OS: Ubuntu 24.04.4 LTS
 - Kernel: 6.8.0-106-generic
 - CPU: 4 cores
-- RAM: 7.5Gi total, 3.0Gi used
-- Disk: 125G/232G (57% used)
-- Uptime: up 1 week, 2 days, 9 hours, 6 minutes
+- RAM: 7.5Gi total, 2.8Gi used
+- Disk: 127G/232G (58% used)
+- Uptime: up 1 week, 2 days, 17 hours, 6 minutes
 - Tailscale IP: 100.71.66.54
 
 ## Docker Services
 | Name | Status | Ports | Image |
 |------|--------|-------|-------|
-| jarvis-engram-cloud | Up 12 hours (healthy) | 100.71.66.54:8080->8080/tcp | jarvis-dashboard-engram-cloud |
-| objective_lewin | Up 31 hours | 0.0.0.0:34272->5432/tcp, [::]:34272->5432/tcp | postgres:16-alpine |
-| epic_satoshi | Up 31 hours | 0.0.0.0:34271->5432/tcp, [::]:34271->5432/tcp | postgres:16-alpine |
-| festive_ardinghelli | Up 31 hours | 0.0.0.0:34263->5432/tcp, [::]:34263->5432/tcp | postgres:16-alpine |
-| silly_banach | Up 31 hours | 0.0.0.0:34259->5432/tcp, [::]:34259->5432/tcp | postgres:16-alpine |
-| suspicious_williams | Up 31 hours | 0.0.0.0:34257->5432/tcp, [::]:34257->5432/tcp | postgres:16-alpine |
-| epic_mcclintock | Up 31 hours | 0.0.0.0:34255->5432/tcp, [::]:34255->5432/tcp | postgres:16-alpine |
-| jarvis-discord-bot | Up 40 hours | 127.0.0.1:9090->9090/tcp | jarvis-dashboard-discord-bot |
-| elegant_khayyam | Up 42 hours | 0.0.0.0:34124->5432/tcp, [::]:34124->5432/tcp | postgres:16-alpine |
-| sad_maxwell | Up 42 hours | 0.0.0.0:34123->5432/tcp, [::]:34123->5432/tcp | postgres:16-alpine |
-| jarvis-dashboard | Up 42 hours (healthy) | 100.71.66.54:3001->3001/tcp | jarvis-dashboard-dashboard |
+| jarvis-mnemo-cloud | Up 5 hours (healthy) | 100.71.66.54:8080->8080/tcp | jarvis-dashboard-mnemo-cloud |
+| quirky_swartz | Up 6 hours | 0.0.0.0:34538->5432/tcp, [::]:34538->5432/tcp | postgres:16-alpine |
+| stupefied_pare | Up 6 hours | 0.0.0.0:34537->5432/tcp, [::]:34537->5432/tcp | postgres:16-alpine |
+| recursing_carver | Up 6 hours | 0.0.0.0:34494->5432/tcp, [::]:34494->5432/tcp | postgres:16-alpine |
+| serene_stonebraker | Up 6 hours | 0.0.0.0:34493->5432/tcp, [::]:34493->5432/tcp | postgres:16-alpine |
+| jarvis-dashboard | Up 7 hours (healthy) | 100.71.66.54:3001->3001/tcp | jarvis-dashboard-dashboard |
+| jarvis-discord-bot | Up 7 hours | 127.0.0.1:9090->9090/tcp | jarvis-dashboard-discord-bot |
+| objective_lewin | Up 39 hours | 0.0.0.0:34272->5432/tcp, [::]:34272->5432/tcp | postgres:16-alpine |
+| epic_satoshi | Up 39 hours | 0.0.0.0:34271->5432/tcp, [::]:34271->5432/tcp | postgres:16-alpine |
+| festive_ardinghelli | Up 39 hours | 0.0.0.0:34263->5432/tcp, [::]:34263->5432/tcp | postgres:16-alpine |
+| silly_banach | Up 39 hours | 0.0.0.0:34259->5432/tcp, [::]:34259->5432/tcp | postgres:16-alpine |
+| suspicious_williams | Up 39 hours | 0.0.0.0:34257->5432/tcp, [::]:34257->5432/tcp | postgres:16-alpine |
+| epic_mcclintock | Up 39 hours | 0.0.0.0:34255->5432/tcp, [::]:34255->5432/tcp | postgres:16-alpine |
+| elegant_khayyam | Up 2 days | 0.0.0.0:34124->5432/tcp, [::]:34124->5432/tcp | postgres:16-alpine |
+| sad_maxwell | Up 2 days | 0.0.0.0:34123->5432/tcp, [::]:34123->5432/tcp | postgres:16-alpine |
 | jarvis-postgres | Up 2 days (healthy) | 127.0.0.1:5432->5432/tcp | postgres:16-alpine |
 | elegant_franklin | Up 2 days | 0.0.0.0:34067->5432/tcp, [::]:34067->5432/tcp | postgres:16-alpine |
 | gallant_bhaskara | Up 2 days | 0.0.0.0:34056->5432/tcp, [::]:34056->5432/tcp | postgres:16-alpine |
@@ -64,7 +68,7 @@ always: true
   discord-bot-poller-backup-20260329-181557.tgz
   discord-bot.rollback-
   discord-bot-tooluse-backup-20260329-183050.tgz
-  engram
+  mnemo
   jarvis-dashboard
   postgres
   svc
@@ -80,6 +84,7 @@ always: true
   opencode.json
   package.json
   package-lock.json
+  projects
   README.md
   scripts
   test-results
@@ -87,7 +92,7 @@ always: true
 
 ## Public URLs
 - Dashboard: https://jarvis.miguelaguiar.dev
-- Engram API: https://engram.miguelaguiar.dev
+- Mnemo API: https://mnemo.miguelaguiar.dev
 - Portfolio: https://miguelaguiar.dev
 
 ## Service Management
@@ -102,7 +107,7 @@ always: true
 - Samba: \\\\100.71.66.54\\jarvis (Tailscale only)
 
 ## Secrets (1Password vault: Desarrollo)
-- jarvis-engram-cloud: DB URL, JWT secret, cloud API key
+- jarvis-mnemo-cloud: DB URL, JWT secret, cloud API key
 - jarvis-dashboard: API URL, API key
 - jarvis-discord-bot: bot token, user ID
 - jarvis-opencode-server: server password

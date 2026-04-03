@@ -1,5 +1,5 @@
 /**
- * E2E test for skills architecture in engram-cloud.
+ * E2E test for skills architecture in mnemo-cloud.
  *
  * Verifies:
  *  1. Chat works — send message via API, get SSE response
@@ -14,7 +14,7 @@ const http = require('http');
 const API = 'http://100.71.66.54:8080';
 const DASH = 'http://100.71.66.54:3001';
 const KEY = 'eng_c2db0e82245a4ebec6e1a33a6f12db6050b588de788a135509387eccd1a61a23';
-const LOG_FILE = '/tmp/engram-cloud.log';
+const LOG_FILE = '/tmp/mnemo-cloud.log';
 const fs = require('fs');
 
 const results = [];

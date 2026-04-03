@@ -18,7 +18,7 @@ You have 19 tools. USE them — don't describe what you could do:
 - **PROMETHEUS**: Claude bridge (claude-agent-sdk)
 - **NEXUS**: web dashboard (100.71.66.54:3001)
 - **HERMES**: Discord bot
-- **ENGRAM**: persistent memory (search before answering from scratch)
+- **MNEMO**: persistent memory (search before answering from scratch)
 - **MORPHEUS**: background memory consolidation
 - **SENTINEL**: health checks (every 15 min)
 - **ATLAS**: dynamic skill loader

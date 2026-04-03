@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const openAIBudget =
     req.nextUrl.searchParams.get("openai_budget") || "200";
   try {
-    const data = await engramFetch(
+    const data = await mnemoFetch(
       `/api/costs/budget?claude_budget=${claudeBudget}&openai_budget=${openAIBudget}`,
     );
     return NextResponse.json(data);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { TraceStats, ToolCall } from "@/lib/engram";
+import type { TraceStats, ToolCall } from "@/lib/mnemo";
 
 // ── Tool color mapping ──────────────────────────────────────────────
 function toolColor(name: string): string {
@@ -180,9 +180,9 @@ export default function TracesClient({
       );
     }
     if (statusFilter === "mnemo") {
-      calls = calls.filter((tc) => tc.is_engram); // is_engram is the API field name
+      calls = calls.filter((tc) => tc.is_mnemo_legacy); // is_mnemo_legacy is the API field name
     } else if (statusFilter === "tool") {
-      calls = calls.filter((tc) => !tc.is_engram);
+      calls = calls.filter((tc) => !tc.is_mnemo_legacy);
     }
     return calls;
   }, [initialCalls, searchQuery, statusFilter]);
@@ -512,7 +512,7 @@ export default function TracesClient({
                                 ? formatDuration(tc.duration_ms)
                                 : "--"}
                             </span>
-                            {tc.is_engram && (
+                            {tc.is_mnemo_legacy && (
                               <span className="badge badge-green">MNEMO</span>
                             )}
                           </button>

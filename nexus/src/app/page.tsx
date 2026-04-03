@@ -11,7 +11,7 @@ import {
   StatusLine,
   Metric,
 } from "@/components/hud";
-import type { TraceStats } from "@/lib/engram";
+import type { TraceStats } from "@/lib/mnemo";
 
 interface SystemInfo {
   cpu: number;
@@ -62,7 +62,7 @@ export default function StatusPage() {
 
       setNow(new Date().toISOString().replace("T", " ").slice(0, 19));
 
-      // Record to engram every 10s (every 5th tick)
+      // Record to mnemo every 10s (every 5th tick)
       recordCounter++;
       if (recordCounter % 5 === 0) {
         fetch("/api/metrics", { method: "POST" }).catch(() => {});
@@ -151,7 +151,7 @@ export default function StatusPage() {
           </div>
           <Waveform points={50} height={35} seed={(stats?.total_calls ?? 7) + tick} />
           <DataMatrix rows={3} cols={20} seed={(stats?.unique_tools ?? 42) + tick} />
-          <StatusLine items={[["ENGRAM", "ONLINE"], ["DURATION", stats ? formatDuration(stats.total_duration_ms) : "—"]]} />
+          <StatusLine items={[["MNEMO", "ONLINE"], ["DURATION", stats ? formatDuration(stats.total_duration_ms) : "—"]]} />
         </HudPanel>
 
         <HudPanel label="PROGRAM STATUS">

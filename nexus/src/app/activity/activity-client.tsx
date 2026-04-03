@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { HudPanel, HexStream, Metric, StatusLine, DataMatrix, Waveform } from "@/components/hud";
-import type { ActivityEntry } from "@/lib/engram";
+import type { ActivityEntry } from "@/lib/mnemo";
 
 // ── Date/time helpers ────────────────────────────────────────────────
 

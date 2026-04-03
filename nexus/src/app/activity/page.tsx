@@ -1,4 +1,4 @@
-import { engramFetch, type ActivityEntry } from "@/lib/engram";
+import { mnemoFetch, type ActivityEntry } from "@/lib/mnemo";
 import ActivityClient from "./activity-client";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export default async function ActivityPage() {
   let entries: ActivityEntry[] = [];
 
   try {
-    const data = await engramFetch<{ entries: ActivityEntry[] }>("/api/activity");
+    const data = await mnemoFetch<{ entries: ActivityEntry[] }>("/api/activity");
     entries = data.entries ?? [];
   } catch {
     // Client will handle empty state and allow refresh

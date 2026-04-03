@@ -36,7 +36,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 | **NEXUS** | Dashboard — web chat, task board, cost metrics, activity feed | Next.js |
 | **HERMES** | Discord bot — DM notifications, message routing | Go |
 | **PROMETHEUS** | Claude bridge — OpenCode serve sessions for code execution | OpenCode serve + Claude credentials |
-| **MNEMO** | Persistent memory — search and save knowledge across sessions | Engram (SQLite + FTS5 + Postgres cloud) |
+| **MNEMO** | Persistent memory — search and save knowledge across sessions | Mnemo (SQLite + FTS5 + Postgres cloud) |
 | **MORPHEUS** | Memory consolidation — background process for importance ranking | Go (background goroutine) |
 | **SENTINEL** | Health monitoring — checks server, DB, services every 15 min | Go (cron) |
 | **ATLAS** | Skill loader — dynamic skill loading from compact index | Go |
@@ -76,8 +76,8 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 - Three catalog tiers: Global (KB), JARVIS ops, Project (per repo)
 - Standardized frontmatter format (name, description, always, triggers)
 
-### Persistent Memory (Engram)
-- Cross-session memory via Engram (SQLite + FTS5 locally, Postgres cloud)
+### Persistent Memory (Mnemo)
+- Cross-session memory via Mnemo (SQLite + FTS5 locally, Postgres cloud)
 - `search_memory` and `save_memory` tools
 - Cloud sync for backup and multi-device access
 - Survives reboots, compactions, context resets
@@ -162,7 +162,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 | Task completion via NL | > 90% success rate | Manual audit of task commands |
 | Budget adherence | Stay within 400 EUR/month | Cost dashboard (P0) |
 | Uptime | > 99% | Docker restart policies + SENTINEL health checks |
-| Memory persistence | Survives reboots, compactions, context resets | Engram cloud sync + backup verification |
+| Memory persistence | Survives reboots, compactions, context resets | Mnemo cloud sync + backup verification |
 | Skill auto-selection | Correct skill loaded 8/10 times | Log audit of `load_skill` calls |
 | E2E test pass rate | > 90% | test-all.sh (currently 55/58) |
 
@@ -184,7 +184,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 |------|------------|--------|------------|
 | OpenCode serve dependency | Medium | High | Single point of failure for Claude access. Monitor uptime via SENTINEL. Evaluate backup LLM providers. |
 | Budget overrun | Medium | Medium | Model routing with auto-downgrade. Real-time cost tracking. Hard budget caps at 100%. |
-| Context window limits | Medium | Medium | Engram persistent memory. Skill-based context injection (load only what's needed). Task decomposition. |
+| Context window limits | Medium | Medium | Mnemo persistent memory. Skill-based context injection (load only what's needed). Task decomposition. |
 | RAM pressure (7.5GB) | Medium | Medium | Limit concurrent sub-agents to 2. Monitor with SENTINEL. Upgrade RAM if needed. |
 | Mnemo data loss | Low | High | Cloud sync (Postgres), .mnemo/ chunk export, periodic backup verification. |
 | LLM fails to select correct skill | Medium | Low | `always: true` for critical skills. `/skill-name` override. Logging to detect misses. |
@@ -200,7 +200,7 @@ These decisions were resolved on 2026-03-31 through a structured grill session:
 2. **Communication**: Hive mind architecture — multiple agent instances coordinated via Postgres LISTEN/NOTIFY.
 3. **Execution**: Sub-agent delegation via OpenCode serve (async, background).
 4. **Budget**: 400 EUR/month hard constraint. Model routing to stay within it.
-5. **Memory**: Engram as the single persistent memory layer (SQLite + FTS5 + cloud sync).
+5. **Memory**: Mnemo as the single persistent memory layer (SQLite + FTS5 + cloud sync).
 6. **Skills**: Unified format with frontmatter. LLM-autonomous selection from compact index.
 7. **Naming**: Mythology-inspired subsystem names (ATHENA, MORPHEUS, SENTINEL, HERMES, ATLAS, PROMETHEUS, MNEMO).
 8. **Infrastructure**: Docker Compose on single homelab server. No Kubernetes.
@@ -216,6 +216,6 @@ These decisions were resolved on 2026-03-31 through a structured grill session:
 | Neuroscience Research (backlog) | `personal-knowledgebase/docs/ideas/neurociencia-cognitiva-aplicada-ia.md` |
 | System Prompt | `config/system-prompt.md` |
 | Journal (2026-03-31) | `personal-knowledgebase/journal/daily/2026-03-31.md` |
-| Engram: Architecture Decisions | observation #3 (project: jarvis-dashboard) |
-| Engram: Subsystem Naming | observation #27 (project: jarvis-dashboard) |
-| Engram: Skills Architecture Archive | observation #20 (project: jarvis-dashboard) |
+| Mnemo: Architecture Decisions | observation #3 (project: jarvis-dashboard) |
+| Mnemo: Subsystem Naming | observation #27 (project: jarvis-dashboard) |
+| Mnemo: Skills Architecture Archive | observation #20 (project: jarvis-dashboard) |

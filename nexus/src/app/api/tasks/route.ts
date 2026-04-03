@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function GET(req: NextRequest) {
   const project = req.nextUrl.searchParams.get("project") || "";
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (priority) params.set("priority", priority);
 
   try {
-    const data = await engramFetch(`/api/tasks?${params.toString()}`);
+    const data = await mnemoFetch(`/api/tasks?${params.toString()}`);
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const data = await engramFetch("/api/tasks", {
+    const data = await mnemoFetch("/api/tasks", {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
     const { id, ...updates } = body;
-    const data = await engramFetch(`/api/tasks/${id}`, {
+    const data = await mnemoFetch(`/api/tasks/${id}`, {
       method: "PATCH",
       body: JSON.stringify(updates),
     });
@@ -53,7 +53,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
     const { id } = body;
-    await engramFetch(`/api/tasks/${id}`, { method: "DELETE" });
+    await mnemoFetch(`/api/tasks/${id}`, { method: "DELETE" });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });

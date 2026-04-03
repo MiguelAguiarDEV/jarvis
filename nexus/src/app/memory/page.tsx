@@ -1,4 +1,4 @@
-import { engramFetch, type SearchResult } from "@/lib/engram";
+import { mnemoFetch, type SearchResult } from "@/lib/mnemo";
 import MemoryClient from "./memory-client";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function MemoryPage() {
 
   for (const q of queries) {
     try {
-      const res = await engramFetch<{ results: SearchResult[] }>(
+      const res = await mnemoFetch<{ results: SearchResult[] }>(
         `/sync/search?q=${encodeURIComponent(q)}&limit=20`
       );
       for (const r of res.results ?? []) {

@@ -28,8 +28,8 @@ func RegisterCommands(s *discordgo.Session, guildID string) {
 	commands := []*discordgo.ApplicationCommand{
 		{Name: "status", Description: "Show homelab status: containers, disk, RAM, uptime"},
 		{Name: "services", Description: "List running Docker services"},
-		{Name: "search", Description: "Search Engram memory", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "query", Description: "Search query", Required: true}}},
-		{Name: "context", Description: "Get recent Engram context for a project", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "project", Description: "Project name", Required: true}}},
+		{Name: "search", Description: "Search Mnemo memory", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "query", Description: "Search query", Required: true}}},
+		{Name: "context", Description: "Get recent Mnemo context for a project", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "project", Description: "Project name", Required: true}}},
 		{Name: "chat", Description: "Start a new chat session with the AI agent", Options: []*discordgo.ApplicationCommandOption{{Type: discordgo.ApplicationCommandOptionString, Name: "topic", Description: "Session topic", Required: false}}},
 		{Name: "end", Description: "End the current chat session"},
 	}
@@ -185,20 +185,20 @@ func handleSearch(s *discordgo.Session, i *discordgo.InteractionCreate, cfg *con
 	query := i.ApplicationCommandData().Options[0].StringValue()
 	ctx = observability.WithFields(ctx, observability.MessageSummary(query))
 	jwt := getJWT()
-	if cfg.EngramURL == "" || jwt == "" {
-		observability.Warn(ctx, "search_unavailable", observability.Fields{"reason": "engram_not_connected"})
-		msg := "Engram not connected"
+	if cfg.MnemoURL == "" || jwt == "" {
+		observability.Warn(ctx, "search_unavailable", observability.Fields{"reason": "mnemo_not_connected"})
+		msg := "Mnemo not connected"
 		_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &msg})
 		return
 	}
 
-	url := fmt.Sprintf("%s/sync/search?q=%s&limit=5", cfg.EngramURL, query)
+	url := fmt.Sprintf("%s/sync/search?q=%s&limit=5", cfg.MnemoURL, query)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Authorization", "Bearer "+jwt)
 	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
 	if err != nil {
-		observability.Error(ctx, "search_request_failed", observability.Fields{"error_class": "engram_request_failed", "error": err.Error()})
-		msg := fmt.Sprintf("Engram error: %v", err)
+		observability.Error(ctx, "search_request_failed", observability.Fields{"error_class": "mnemo_request_failed", "error": err.Error()})
+		msg := fmt.Sprintf("Mnemo error: %v", err)
 		_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &msg})
 		return
 	}
@@ -241,20 +241,20 @@ func handleContext(s *discordgo.Session, i *discordgo.InteractionCreate, cfg *co
 	project := i.ApplicationCommandData().Options[0].StringValue()
 	ctx = observability.WithFields(ctx, observability.MessageSummary(project))
 	jwt := getJWT()
-	if cfg.EngramURL == "" || jwt == "" {
-		observability.Warn(ctx, "context_unavailable", observability.Fields{"reason": "engram_not_connected"})
-		msg := "Engram not connected"
+	if cfg.MnemoURL == "" || jwt == "" {
+		observability.Warn(ctx, "context_unavailable", observability.Fields{"reason": "mnemo_not_connected"})
+		msg := "Mnemo not connected"
 		_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &msg})
 		return
 	}
 
-	url := fmt.Sprintf("%s/sync/context?project=%s&limit=5", cfg.EngramURL, project)
+	url := fmt.Sprintf("%s/sync/context?project=%s&limit=5", cfg.MnemoURL, project)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Authorization", "Bearer "+jwt)
 	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
 	if err != nil {
-		observability.Error(ctx, "context_request_failed", observability.Fields{"error_class": "engram_request_failed", "error": err.Error()})
-		msg := fmt.Sprintf("Engram error: %v", err)
+		observability.Error(ctx, "context_request_failed", observability.Fields{"error_class": "mnemo_request_failed", "error": err.Error()})
+		msg := fmt.Sprintf("Mnemo error: %v", err)
 		_, _ = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &msg})
 		return
 	}
@@ -273,12 +273,12 @@ func handleContext(s *discordgo.Session, i *discordgo.InteractionCreate, cfg *co
 	observability.Info(ctx, "context_completed", observability.Fields{"context_empty": msg == ""})
 }
 
-func EngramLogin(cfg *config.Config) error {
-	ctx := observability.WithFields(observability.WithTrace(context.Background(), observability.NewTraceID()), observability.Fields{"component": "engram_auth", "engram_url": cfg.EngramURL, "engram_user": cfg.EngramUser})
-	body, _ := json.Marshal(map[string]string{"username": cfg.EngramUser, "password": cfg.EngramPass})
-	resp, err := http.Post(cfg.EngramURL+"/auth/login", "application/json", bytes.NewReader(body))
+func MnemoLogin(cfg *config.Config) error {
+	ctx := observability.WithFields(observability.WithTrace(context.Background(), observability.NewTraceID()), observability.Fields{"component": "mnemo_auth", "mnemo_url": cfg.MnemoURL, "mnemo_user": cfg.MnemoUser})
+	body, _ := json.Marshal(map[string]string{"username": cfg.MnemoUser, "password": cfg.MnemoPass})
+	resp, err := http.Post(cfg.MnemoURL+"/auth/login", "application/json", bytes.NewReader(body))
 	if err != nil {
-		observability.Error(ctx, "engram_login_request_failed", observability.Fields{"error_class": "engram_login_failed", "error": err.Error()})
+		observability.Error(ctx, "mnemo_login_request_failed", observability.Fields{"error_class": "mnemo_login_failed", "error": err.Error()})
 		return err
 	}
 	defer resp.Body.Close()
@@ -286,17 +286,17 @@ func EngramLogin(cfg *config.Config) error {
 		AccessToken string `json:"access_token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		observability.Error(ctx, "engram_login_decode_failed", observability.Fields{"error_class": "engram_login_decode_failed", "error": err.Error()})
+		observability.Error(ctx, "mnemo_login_decode_failed", observability.Fields{"error_class": "mnemo_login_decode_failed", "error": err.Error()})
 		return err
 	}
 	if result.AccessToken == "" {
-		observability.Warn(ctx, "engram_login_empty_token", nil)
+		observability.Warn(ctx, "mnemo_login_empty_token", nil)
 		return fmt.Errorf("no access_token in response")
 	}
 	jwtMu.Lock()
 	jwtToken = result.AccessToken
 	jwtMu.Unlock()
-	observability.Info(ctx, "engram_login_succeeded", nil)
+	observability.Info(ctx, "mnemo_login_succeeded", nil)
 	return nil
 }
 

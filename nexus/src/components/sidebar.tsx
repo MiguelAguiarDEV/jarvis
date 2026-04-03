@@ -78,7 +78,7 @@ export function Sidebar() {
         <div className="sidebar-footer">
           <div className="status-line">
             <span className="status-dot" />
-            ENGRAM CLOUD SYNC
+            MNEMO CLOUD SYNC
           </div>
         </div>
       </nav>

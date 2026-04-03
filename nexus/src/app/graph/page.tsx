@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { GraphNode } from "@/lib/engram";
+import type { GraphNode } from "@/lib/mnemo";
 
 const NODE_COLORS: Record<string, string> = {
   session: "#6a9dc8",

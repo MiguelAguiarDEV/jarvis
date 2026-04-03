@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function DELETE(
   _req: NextRequest,
@@ -7,7 +7,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    await engramFetch(`/api/conversations/${id}`, { method: "DELETE" });
+    await mnemoFetch(`/api/conversations/${id}`, { method: "DELETE" });
     return NextResponse.json({ status: "deleted" });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
@@ -21,7 +21,7 @@ export async function PATCH(
   const { id } = await params;
   const body = await req.json();
   try {
-    await engramFetch(`/api/conversations/${id}`, {
+    await mnemoFetch(`/api/conversations/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function GET(
   _req: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const data = await engramFetch<Record<string, unknown>>(
+    const data = await mnemoFetch<Record<string, unknown>>(
       `/api/observations/${id}`,
     );
     return NextResponse.json(data);

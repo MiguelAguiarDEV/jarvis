@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export async function GET(
   const offset = sp.get("offset") || "0";
 
   try {
-    const data = await engramFetch(
+    const data = await mnemoFetch(
       `/traces/session/${encodeURIComponent(id)}?limit=${limit}&offset=${offset}`,
     );
     return NextResponse.json(data);

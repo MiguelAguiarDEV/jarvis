@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function GET(
   req: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
   const limit = req.nextUrl.searchParams.get("limit") || "50";
 
   try {
-    const data = await engramFetch<Record<string, unknown>>(
+    const data = await mnemoFetch<Record<string, unknown>>(
       `/api/sessions/${encodeURIComponent(id)}/observations?limit=${limit}`,
     );
     return NextResponse.json(data);

@@ -167,7 +167,7 @@ export function Equalizer({
 }
 
 // ─── Status Line ───────────────────────────────────────────────────────────
-// ACTIVE: ENGRAM  |  03.x  |  SYNC: READY
+// ACTIVE: MNEMO  |  03.x  |  SYNC: READY
 export function StatusLine({ items }: { items: [string, string][] }) {
   return (
     <div className="status-line-row">

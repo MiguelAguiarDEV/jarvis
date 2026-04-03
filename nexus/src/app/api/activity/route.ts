@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 
 export async function GET(req: NextRequest) {
   const project = req.nextUrl.searchParams.get("project") || "";
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (cursor) params.set("cursor", cursor);
 
   try {
-    const data = await engramFetch(`/api/activity?${params.toString()}`);
+    const data = await mnemoFetch(`/api/activity?${params.toString()}`);
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json(

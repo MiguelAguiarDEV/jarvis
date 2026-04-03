@@ -1,7 +1,7 @@
-const API_URL = process.env.ENGRAM_API_URL!;
-const API_KEY = process.env.ENGRAM_API_KEY!;
+const API_URL = process.env.MNEMO_API_URL!;
+const API_KEY = process.env.MNEMO_API_KEY!;
 
-export async function engramFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function mnemoFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
@@ -31,7 +31,7 @@ export interface ToolCall {
   tokens_out?: number;
   model?: string;
   cost_usd?: string;
-  is_engram: boolean;
+  is_mnemo_legacy: boolean;
   occurred_at: string;
 }
 

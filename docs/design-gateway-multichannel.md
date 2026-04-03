@@ -10,7 +10,7 @@
 JARVIS has two hardcoded channels:
 
 1. **Web chat (NEXUS)**: HTTP POST to `/api/chat`, SSE response stream. Lives in `athena/internal/cloud/cloudserver/chat.go`.
-2. **Discord (HERMES)**: Separate Go binary (`hermes/`), uses `discordgo`, calls ATHENA's `/api/chat` endpoint as an HTTP client via `EngramChatClient`.
+2. **Discord (HERMES)**: Separate Go binary (`hermes/`), uses `discordgo`, calls ATHENA's `/api/chat` endpoint as an HTTP client via `MnemoChatClient`.
 
 Adding WhatsApp, Voice, Telegram, or CLI requires either:
 - (A) Building another standalone bot (like Hermes) for each channel -- duplicates session management, auth, formatting.

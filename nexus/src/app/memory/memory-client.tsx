@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { SearchResult } from "@/lib/engram";
+import type { SearchResult } from "@/lib/mnemo";
 
 // ── Type badge color mapping ──────────────────────────────────────────
 function typeBadge(type: string): string {

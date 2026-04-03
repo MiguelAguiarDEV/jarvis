@@ -62,7 +62,7 @@ Orchestrator brain. Receives messages, manages conversation, dispatches tools, c
 
 - **Port**: 8080 (bound to Tailscale IP 100.71.66.54)
 - **API**: REST -- `/health`, `/api/chat`, `/api/tasks`, `/api/conversations`
-- **Go module**: `github.com/Gentleman-Programming/engram` (legacy path, not renamed)
+- **Go module**: `github.com/MiguelAguiarDEV/mnemo` (legacy path, not renamed)
 
 ### NEXUS (nexus/)
 
@@ -232,7 +232,7 @@ type ToolExecutor interface {
 
 ## 6. Memory System
 
-### Engram
+### Mnemo
 
 Persistent memory across sessions. Local SQLite is source of truth; cloud (PostgreSQL) is replication target.
 
@@ -288,7 +288,7 @@ op run --env-file=.env.tpl -- docker compose up -d
 | Secret injection   | 1Password Service Account (`op run`)               |
 | Dashboard auth     | Cloudflare Access (external), API key (internal)   |
 | Discord bot        | `ALLOWED_USER_IDS` -- owner only                   |
-| Engram Cloud API   | JWT (`ENGRAM_JWT_SECRET`) + API key                |
+| Mnemo Cloud API   | JWT (`MNEMO_JWT_SECRET`) + API key                |
 | Inter-service      | Docker network isolation + API keys                |
 | No secrets in git  | `.env.tpl` has `op://` refs only                   |
 | Host volumes       | Read-only where possible (`:ro`)                   |
@@ -311,7 +311,7 @@ op run --env-file=.env.tpl -- docker compose up -d --build
 ### Go Module
 
 ```
-module: github.com/Gentleman-Programming/engram
+module: github.com/MiguelAguiarDEV/mnemo
 go: 1.22+
 ```
 

@@ -23,7 +23,7 @@ func main() {
 		"metrics_addr":      cfg.MetricsAddr,
 		"diagnostics_dir":   cfg.DiagnosticsDir,
 		"opencode_enabled":  cfg.OpenCodeURL != "" && cfg.OpenCodePassword != "",
-		"engram_enabled":    cfg.EngramURL != "" && cfg.EngramUser != "",
+		"mnemo_enabled":    cfg.MnemoURL != "" && cfg.MnemoUser != "",
 	})
 
 	if err := observability.Setup(bootCtx, cfg.MetricsAddr, cfg.DiagnosticsDir, func() map[string]any {
@@ -31,7 +31,7 @@ func main() {
 			"session_file_path": cfg.SessionFilePath,
 			"diagnostics_dir":   cfg.DiagnosticsDir,
 			"opencode_url":      cfg.OpenCodeURL,
-			"engram_url":        cfg.EngramURL,
+			"mnemo_url":        cfg.MnemoURL,
 		}
 	}); err != nil {
 		log.Fatalf("Error starting observability: %v", err)
@@ -43,17 +43,17 @@ func main() {
 	}()
 	observability.Info(bootCtx, "bot_starting", nil)
 
-	// Engram authentication
-	if cfg.EngramURL != "" && cfg.EngramUser != "" {
-		if err := discord.EngramLogin(cfg); err != nil {
-			observability.Warn(bootCtx, "engram_login_failed", observability.Fields{"error_class": "engram_login_failed", "error": err.Error()})
+	// Mnemo authentication
+	if cfg.MnemoURL != "" && cfg.MnemoUser != "" {
+		if err := discord.MnemoLogin(cfg); err != nil {
+			observability.Warn(bootCtx, "mnemo_login_failed", observability.Fields{"error_class": "mnemo_login_failed", "error": err.Error()})
 		} else {
-			observability.Info(bootCtx, "engram_authenticated", nil)
+			observability.Info(bootCtx, "mnemo_authenticated", nil)
 			go func() {
 				for {
 					time.Sleep(50 * time.Minute)
-					if err := discord.EngramLogin(cfg); err != nil {
-						observability.Warn(bootCtx, "engram_jwt_refresh_failed", observability.Fields{"error_class": "engram_jwt_refresh_failed", "error": err.Error()})
+					if err := discord.MnemoLogin(cfg); err != nil {
+						observability.Warn(bootCtx, "mnemo_jwt_refresh_failed", observability.Fields{"error_class": "mnemo_jwt_refresh_failed", "error": err.Error()})
 					}
 				}
 			}()

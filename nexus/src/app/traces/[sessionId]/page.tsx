@@ -1,4 +1,4 @@
-import { engramFetch, type SessionToolCalls } from "@/lib/engram";
+import { mnemoFetch, type SessionToolCalls } from "@/lib/mnemo";
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -20,7 +20,7 @@ export default async function SessionTracePage({
   let data: SessionToolCalls | null = null;
 
   try {
-    data = await engramFetch<SessionToolCalls>(
+    data = await mnemoFetch<SessionToolCalls>(
       `/traces/session/${encodeURIComponent(sessionId)}?limit=500`
     );
   } catch {
@@ -68,7 +68,7 @@ export default async function SessionTracePage({
                   {tc.duration_ms != null && (
                     <span className="badge badge-muted">{tc.duration_ms}ms</span>
                   )}
-                  {tc.is_engram && (
+                  {tc.is_mnemo_legacy && (
                     <span className="badge badge-green">MNEMO</span>
                   )}
                 </summary>

@@ -15,7 +15,7 @@ Evaluate each item. If everything is fine, respond HEARTBEAT_OK. If something ne
 ## Important (check every hour)
 - [ ] Pending tasks: any task stuck > 24h? Alert owner.
 - [ ] Failed jobs: any delegation failed? Report error.
-- [ ] Memory: last engram save > 6h ago? Remind to persist context.
+- [ ] Memory: last mnemo save > 6h ago? Remind to persist context.
 
 ## Nice to have (check daily)
 - [ ] Git: uncommitted changes in ~/projects/jarvis-dashboard/?

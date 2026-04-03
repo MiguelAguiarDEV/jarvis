@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { engramFetch } from "@/lib/engram";
+import { mnemoFetch } from "@/lib/mnemo";
 import os from "os";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const limit = req.nextUrl.searchParams.get("limit") || "60";
   try {
-    const data = await engramFetch(`/api/metrics?limit=${limit}`);
+    const data = await mnemoFetch(`/api/metrics?limit=${limit}`);
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ metrics: [] });
@@ -46,7 +46,7 @@ export async function POST() {
   };
 
   try {
-    await engramFetch("/api/metrics", {
+    await mnemoFetch("/api/metrics", {
       method: "POST",
       body: JSON.stringify(body),
     });
