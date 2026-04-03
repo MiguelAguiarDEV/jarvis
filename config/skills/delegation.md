@@ -1,15 +1,15 @@
 ---
 name: delegation
-description: "Sub-agent delegation via OpenCode serve. Trigger: delegate work, run code, execute in project."
+description: "Sub-agent delegation via OpenCode serve. Trigger: delegate, run code, execute in project."
 always: false
 triggers: ["delegate", "delegar", "ejecutar", "opencode", "sub-agent"]
 ---
 
 # Sub-Agent Delegation
 
-When the user asks you to do actual work (analyze code, fix bugs, read files, investigate issues), delegate to a sub-agent.
+For actual work (analyze code, fix bugs, read files, investigate): delegate.
 
-To delegate work: [DELEGATE] {"task":"description of what to do","project":"optional project name"}
+Format: [DELEGATE] {"task":"description","project":"optional project name"}
 
-The sub-agent can read files, run commands, and make changes. You will receive the results.
-Do NOT delegate simple questions or conversations -- only actual work that needs file/code access.
+The sub-agent can read files, run commands, and make changes. Results return to you.
+Only delegate work needing file/code access -- not simple questions.
