@@ -36,6 +36,7 @@ services:
       ENGRAM_DATABASE_URL: ${ENGRAM_DATABASE_URL}
       DISCORD_BOT_TOKEN: ${DISCORD_TOKEN}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
+      JARVIS_DISCORD_ENABLED: ${JARVIS_DISCORD_ENABLED:-false}
       JARVIS_CONFIG_DIR: /config
       JARVIS_BUDGET_OPENAI: "200"
       JARVIS_BUDGET_CLAUDE: "200"
@@ -94,6 +95,10 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # NOTE: Discord is being migrated to ATHENA Gateway (Phase 3).
+  # When JARVIS_DISCORD_ENABLED=true on engram-cloud, ATHENA handles Discord.
+  # This container remains as fallback until migration is validated.
+  # Both containers MUST NOT run with the same bot token simultaneously.
   discord-bot:
     build:
       context: ./hermes
