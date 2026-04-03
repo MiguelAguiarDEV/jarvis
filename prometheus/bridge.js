@@ -74,7 +74,7 @@ const server = createServer(async (req, res) => {
 
     for await (const msg of query({
       prompt: prompt.trim(),
-      options: { model, systemPrompt: systemPrompt || undefined }
+      options: { model, systemPrompt: systemPrompt || undefined, maxTurns: 3 }
     })) {
       if (msg.type === 'assistant') {
         for (const b of msg.message.content) {
