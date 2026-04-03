@@ -1,0 +1,15 @@
+[Unit]
+Description=PROMETHEUS Bridge (JARVIS Claude access via claude-agent-sdk)
+After=network.target
+
+[Service]
+Type=simple
+User=mx
+WorkingDirectory=/home/mx/projects/jarvis-dashboard/prometheus
+ExecStart=/usr/bin/node bridge.js
+Environment=PROMETHEUS_BRIDGE_PORT=9876
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
