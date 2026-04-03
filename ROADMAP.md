@@ -3,10 +3,10 @@
 > Last updated: 2026-04-03
 > Goal: JARVIS autónomo que no depende de OpenCode ni Claude Code para operar
 
-## Current State (~45% complete)
+## Current State (~65% complete)
 
 ### Done
-- [x] Orchestrator Go con tool system (8 tools, dispatcher, tool-call loop max 3)
+- [x] Orchestrator Go con tool system (18 tools, dispatcher, tool-call loop max 3)
 - [x] Skills architecture (registry, loader, LLM-autonomous, /skill-name, always:true)
 - [x] LLM backend abstraction (Backend interface, swappable)
 - [x] PROMETHEUS bridge (claude-agent-sdk query() → Claude API sin rate limit)
@@ -23,10 +23,10 @@
 
 | # | Task | Status | Blocks |
 |---|------|--------|--------|
-| 1 | Filesystem tools (read_file, write_file, edit_file) | Not started | 3, 5 |
-| 2 | Shell tool (bash) con guardrails | Not started | 3, 5 |
-| 3 | Search tools (grep, glob) | Not started | 5 |
-| 4 | Web tools (fetch_url, web_search) | Not started | 5 |
+| 1 | Filesystem tools (read_file, write_file, edit_file) | **DONE** | 3, 5 |
+| 2 | Shell tool (bash) con guardrails | **DONE** | 3, 5 |
+| 3 | Search tools (grep, glob) | **DONE** | 5 |
+| 4 | Web tools (fetch_url, web_search) | fetch_url DONE, web_search pending | 5 |
 | 5 | Traces en todas las tools | Not started | 7 |
 | 6 | Rewire chat para usar solo PROMETHEUS (no OpenCode) | Not started | 7 |
 | 7 | Eliminar OpenCode como dependencia para chat | Not started | — |
