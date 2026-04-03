@@ -1,0 +1,136 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jarvis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  engram-cloud:
+    build:
+      context: ./athena
+      dockerfile: Dockerfile
+    container_name: jarvis-engram-cloud
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENGRAM_JWT_SECRET: ${ENGRAM_JWT_SECRET}
+      ENGRAM_DATABASE_URL: ${ENGRAM_DATABASE_URL}
+      DISCORD_BOT_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_USER_ID: ${DISCORD_USER_ID}
+      JARVIS_CONFIG_DIR: /config
+      JARVIS_BUDGET_OPENAI: "200"
+      JARVIS_BUDGET_CLAUDE: "200"
+      OPENCODE_SERVE_URL: http://host.docker.internal:4096
+      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD}
+      CLAUDE_CREDENTIALS_PATH: /claude-credentials/.credentials.json
+      CLAUDE_API_TOKEN: ${CLAUDE_API_TOKEN}
+    volumes:
+      - ./config:/config:ro
+      - /home/mx/.claude:/claude-credentials:ro
+      # PROMETHEUS v2: mount project directories for native tool executor
+      - /home/mx/projects:/home/mx/projects
+      - /home/mx/personal-knowledgebase:/home/mx/personal-knowledgebase
+    ports:
+      - "100.71.66.54:8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  dashboard:
+    build:
+      context: ./nexus
+      dockerfile: Dockerfile
+    container_name: jarvis-dashboard
+    restart: unless-stopped
+    depends_on:
+      engram-cloud:
+        condition: service_healthy
+    environment:
+      ENGRAM_API_URL: http://engram-cloud:8080
+      ENGRAM_API_KEY: ${ENGRAM_API_KEY}
+      PORT: "3001"
+      HOSTNAME: 0.0.0.0
+      KB_ROOT: /kb
+    volumes:
+      - /home/mx/personal-knowledgebase:/kb:ro
+    ports:
+      - "100.71.66.54:3001:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(r=>{process.exit(r.ok?0:1)}).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  discord-bot:
+    build:
+      context: ./hermes
+      dockerfile: Dockerfile
+    container_name: jarvis-discord-bot
+    restart: unless-stopped
+    depends_on:
+      engram-cloud:
+        condition: service_healthy
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      DISCORD_USER_ID: ${DISCORD_USER_ID}
+      ALLOWED_USER_IDS: ${DISCORD_USER_ID}
+      ENGRAM_URL: http://engram-cloud:8080
+      ENGRAM_USER: ${ENGRAM_USER}
+      ENGRAM_PASS: ${ENGRAM_PASS}
+      ENGRAM_API_KEY: ${ENGRAM_API_KEY}
+      OPENCODE_SERVER_URL: http://host.docker.internal:4096
+      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD}
+      SESSION_FILE_PATH: /data/sessions.json
+      METRICS_ADDR: 0.0.0.0:9090
+      DIAGNOSTICS_DIR: /data/diagnostics
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - bot-data:/data
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_postgres_data:
+    external: true
+  bot-data:

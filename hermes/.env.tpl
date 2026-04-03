@@ -1,0 +1,11 @@
+DISCORD_TOKEN=op://Desarrollo/jarvis-discord-bot/password
+DISCORD_GUILD_ID=op://Desarrollo/jarvis-discord-bot/server_id
+ALLOWED_USER_IDS=op://Desarrollo/jarvis-discord-bot/user_id
+ENGRAM_URL=http://engram-cloud:8080
+ENGRAM_USER=mx
+ENGRAM_PASS=op://Desarrollo/jarvis-engram-cloud-auth/engram_password
+OPENCODE_SERVER_URL=http://host.docker.internal:4096
+OPENCODE_SERVER_PASSWORD=op://Desarrollo/jarvis-opencode-server/password
+SESSION_FILE_PATH=/data/sessions.json
+METRICS_ADDR=0.0.0.0:9090
+DIAGNOSTICS_DIR=/data/diagnostics

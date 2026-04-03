@@ -1,0 +1,34 @@
+# Secrets
+.env
+.env.local
+.env.systemd
+*.env
+**/.env.local
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+.next/
+athena/engram
+athena/cmd/engram/main
+athena/cmd/engram/gentle-creation
+
+# Hermes binaries
+hermes/bot
+hermes/discord-bot
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Test artifacts
+coverage/
+*.test.log
