@@ -135,6 +135,16 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  swagger:
+    image: swaggerapi/swagger-ui
+    container_name: jarvis-swagger
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      SWAGGER_JSON: /api/openapi.yaml
+    volumes:
+      - ./athena/api/openapi.yaml:/api/openapi.yaml:ro
+
 volumes:
   postgres_postgres_data:
     external: true
