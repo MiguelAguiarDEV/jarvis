@@ -65,7 +65,8 @@ const server = createServer(async (req, res) => {
     // Tools are managed by the ATHENA orchestrator's own tool-call loop.
     // The bridge only handles text-in → text-out via claude-agent-sdk query().
 
-    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0}`);
+    const maxTurns = request.maxTurns || 1; // default quick mode (1 turn)
+    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns}`);
 
     let responseText = '';
     let totalCost = 0;
@@ -74,7 +75,7 @@ const server = createServer(async (req, res) => {
 
     for await (const msg of query({
       prompt: prompt.trim(),
-      options: { model, systemPrompt: systemPrompt || undefined, maxTurns: 3 }
+      options: { model, systemPrompt: systemPrompt || undefined, maxTurns }
     })) {
       if (msg.type === 'assistant') {
         for (const b of msg.message.content) {
