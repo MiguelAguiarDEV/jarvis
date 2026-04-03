@@ -61,23 +61,11 @@ const server = createServer(async (req, res) => {
       else if (msg.role === 'system') systemPrompt += '\n' + content;
     }
 
-    // Add tool definitions to system prompt
-    if (request.tools?.length > 0) {
-      systemPrompt += '\n\nAvailable tools (use by responding with tool_use JSON):\n';
-      for (const tool of request.tools) {
-        systemPrompt += `- ${tool.name}: ${tool.description || ''}\n`;
-        const schema = tool.input_schema || tool.inputSchema || {};
-        if (schema.properties) {
-          const params = Object.entries(schema.properties)
-            .map(([k, v]) => `${k}: ${v.type || 'any'}`)
-            .join(', ');
-          systemPrompt += `  params: {${params}}\n`;
-        }
-      }
-      systemPrompt += '\nTo use a tool respond ONLY with: {"tool_use":{"name":"tool_name","input":{...}}}\n';
-    }
+    // NOTE: Tool definitions are NOT injected into the bridge prompt.
+    // Tools are managed by the ATHENA orchestrator's own tool-call loop.
+    // The bridge only handles text-in → text-out via claude-agent-sdk query().
 
-    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | tools:${request.tools?.length||0}`);
+    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0}`);
 
     let responseText = '';
     let totalCost = 0;
