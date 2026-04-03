@@ -132,7 +132,7 @@ export default function TracesClient({
   initialCalls,
 }: TracesClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "engram" | "tool">(
+  const [statusFilter, setStatusFilter] = useState<"all" | "mnemo" | "tool">(
     "all",
   );
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
@@ -179,8 +179,8 @@ export default function TracesClient({
           tc.agent.toLowerCase().includes(q),
       );
     }
-    if (statusFilter === "engram") {
-      calls = calls.filter((tc) => tc.is_engram);
+    if (statusFilter === "mnemo") {
+      calls = calls.filter((tc) => tc.is_engram); // is_engram is the API field name
     } else if (statusFilter === "tool") {
       calls = calls.filter((tc) => !tc.is_engram);
     }
@@ -419,11 +419,11 @@ export default function TracesClient({
                 TOOLS
               </button>
               <button
-                className={`traces-filter-btn ${statusFilter === "engram" ? "active" : ""}`}
-                onClick={() => setStatusFilter("engram")}
+                className={`traces-filter-btn ${statusFilter === "mnemo" ? "active" : ""}`}
+                onClick={() => setStatusFilter("mnemo")}
                 type="button"
               >
-                ENGRAM
+                MNEMO
               </button>
             </div>
 
@@ -513,7 +513,7 @@ export default function TracesClient({
                                 : "--"}
                             </span>
                             {tc.is_engram && (
-                              <span className="badge badge-green">ENGRAM</span>
+                              <span className="badge badge-green">MNEMO</span>
                             )}
                           </button>
 

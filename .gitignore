@@ -10,9 +10,9 @@ node_modules/
 
 # Build artifacts
 .next/
-athena/engram
-athena/cmd/engram/main
-athena/cmd/engram/gentle-creation
+athena/mnemo
+athena/cmd/mnemo/main
+athena/cmd/mnemo/gentle-creation
 athena/jarvis
 
 # Hermes binaries

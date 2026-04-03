@@ -6,7 +6,7 @@ const API_KEY = process.env.ENGRAM_API_KEY!;
 /**
  * GET /api/observations?q=<search>&type=<filter>&project=<filter>&limit=<n>
  *
- * Proxies to the engram cloud search endpoint.
+ * Proxies to the mnemo cloud search endpoint.
  * When no query is provided, runs a broad search to list all observations.
  */
 export async function GET(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const project = sp.get("project") || "";
   const limit = sp.get("limit") || "100";
 
-  // The engram search API requires a non-empty query.
+  // The mnemo search API requires a non-empty query.
   // When the user hasn't typed a search query, we run multiple broad queries
   // to collect all observations, mirroring what the original server page did.
   if (!q) {

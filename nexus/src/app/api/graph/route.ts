@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
   const maxNodes = req.nextUrl.searchParams.get("max_nodes") || "500";
 
   try {
-    // Fetch engram graph data
+    // Fetch mnemo graph data
     const data = await engramFetch<{
       nodes: DocNode[];
       edges: DocEdge[];
@@ -140,26 +140,26 @@ export async function GET(req: NextRequest) {
     try {
       kbData = scanMarkdownFiles();
     } catch {
-      // KB not accessible -- continue with engram data only
+      // KB not accessible -- continue with mnemo data only
     }
 
-    // Merge: deduplicate nodes by ID (engram takes priority)
+    // Merge: deduplicate nodes by ID (mnemo takes priority)
     const existingIds = new Set((data.nodes || []).map((n) => n.id));
     const mergedNodes = [
       ...(data.nodes || []),
       ...kbData.nodes.filter((n) => !existingIds.has(n.id)),
     ];
 
-    // Connect KB topic nodes to matching engram topic nodes
+    // Connect KB topic nodes to matching mnemo topic nodes
     const extraEdges: DocEdge[] = [];
-    const engramTopics = (data.nodes || [])
+    const mnemoTopics = (data.nodes || [])
       .filter((n) => n.type === "topic")
       .map((n) => ({ id: n.id, label: n.label?.toLowerCase() }));
 
     for (const kbNode of kbData.nodes) {
       if (kbNode.type === "topic") {
         // Check if engram has a matching topic
-        const match = engramTopics.find(
+        const match = mnemoTopics.find(
           (t) => t.label === kbNode.label?.toLowerCase()
         );
         if (match && match.id !== kbNode.id) {

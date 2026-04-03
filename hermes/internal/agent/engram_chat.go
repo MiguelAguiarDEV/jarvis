@@ -14,7 +14,7 @@ import (
 	"jarvis-discord-bot/internal/observability"
 )
 
-// EngramChatClient talks to the engram-cloud /api/chat SSE endpoint
+// EngramChatClient talks to the mnemo-cloud /api/chat SSE endpoint
 // and /api/conversations REST endpoints.
 type EngramChatClient struct {
 	BaseURL    string
@@ -22,7 +22,7 @@ type EngramChatClient struct {
 	HTTPClient *http.Client
 }
 
-// NewEngramChatClient creates a client for the engram chat API.
+// NewEngramChatClient creates a client for the mnemo chat API.
 func NewEngramChatClient(baseURL, apiKey string) *EngramChatClient {
 	return &EngramChatClient{
 		BaseURL:    strings.TrimRight(baseURL, "/"),
@@ -54,14 +54,14 @@ func (c *EngramChatClient) CreateConversation(ctx context.Context, title string)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		opErr = fmt.Errorf("engram conversation create: %w", err)
+		opErr = fmt.Errorf("mnemo conversation create: %w", err)
 		return 0, opErr
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
-		opErr = fmt.Errorf("engram conversation create: status %d: %s", resp.StatusCode, string(respBody))
+		opErr = fmt.Errorf("mnemo conversation create: status %d: %s", resp.StatusCode, string(respBody))
 		return 0, opErr
 	}
 
@@ -76,7 +76,7 @@ func (c *EngramChatClient) CreateConversation(ctx context.Context, title string)
 	return result.ID, nil
 }
 
-// ChatSSE sends a message to the engram chat SSE endpoint and collects
+// ChatSSE sends a message to the mnemo chat SSE endpoint and collects
 // the full streamed response. It calls onToken for each token received.
 // Returns the complete assembled response.
 func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, message string, onToken func(string)) (string, error) {
@@ -112,14 +112,14 @@ func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, me
 	observability.Info(ctx, "engram_chat_request_start", nil)
 	resp, err := sseClient.Do(req)
 	if err != nil {
-		opErr = fmt.Errorf("engram chat: %w", err)
+		opErr = fmt.Errorf("mnemo chat: %w", err)
 		return "", opErr
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
-		opErr = fmt.Errorf("engram chat: status %d: %s", resp.StatusCode, string(respBody))
+		opErr = fmt.Errorf("mnemo chat: status %d: %s", resp.StatusCode, string(respBody))
 		return "", opErr
 	}
 
@@ -140,7 +140,7 @@ func (c *EngramChatClient) ChatSSE(ctx context.Context, conversationID int64, me
 
 		// Check for error event.
 		if errMsg, ok := event["error"].(string); ok {
-			opErr = fmt.Errorf("engram chat error: %s", errMsg)
+			opErr = fmt.Errorf("mnemo chat error: %s", errMsg)
 			return sb.String(), opErr
 		}
 

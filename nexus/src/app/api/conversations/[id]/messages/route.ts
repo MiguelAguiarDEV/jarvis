@@ -8,7 +8,7 @@ export async function GET(
   const { id } = await params;
   try {
     const data = await engramFetch<unknown>(`/api/conversations/${id}/messages`);
-    // Normalize: engram may return [...] or { messages: [...] }
+    // Normalize: mnemo may return [...] or { messages: [...] }
     let messages: unknown[];
     if (Array.isArray(data)) {
       messages = data;

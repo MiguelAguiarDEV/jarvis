@@ -11,7 +11,7 @@
 - [x] LLM backend abstraction (Backend interface, swappable)
 - [x] PROMETHEUS bridge (claude-agent-sdk query() → Claude API sin rate limit)
 - [x] Monorepo containerizado (Docker Compose, 1Password op run, health checks)
-- [x] Memory system (engram CLI wrapper: search_memory, save_memory)
+- [x] Memory system (mnemo CLI wrapper: search_memory, save_memory)
 - [x] Task management (create_task, list_tasks, complete_task)
 - [x] Delegation (OpenCode serve sessions para coding tasks)
 - [x] Notifications (Discord DM via Notifier interface)

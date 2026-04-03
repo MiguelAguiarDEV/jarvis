@@ -22,11 +22,11 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  engram-cloud:
+  mnemo-cloud:
     build:
       context: ./athena
       dockerfile: Dockerfile
-    container_name: jarvis-engram-cloud
+    container_name: jarvis-mnemo-cloud
     restart: unless-stopped
     depends_on:
       postgres:
@@ -72,10 +72,10 @@ services:
     container_name: jarvis-dashboard
     restart: unless-stopped
     depends_on:
-      engram-cloud:
+      mnemo-cloud:
         condition: service_healthy
     environment:
-      ENGRAM_API_URL: http://engram-cloud:8080
+      ENGRAM_API_URL: http://mnemo-cloud:8080
       ENGRAM_API_KEY: ${ENGRAM_API_KEY}
       PORT: "3001"
       HOSTNAME: 0.0.0.0
@@ -96,7 +96,7 @@ services:
         max-file: "3"
 
   # NOTE: Discord is being migrated to ATHENA Gateway (Phase 3).
-  # When JARVIS_DISCORD_ENABLED=true on engram-cloud, ATHENA handles Discord.
+  # When JARVIS_DISCORD_ENABLED=true on mnemo-cloud, ATHENA handles Discord.
   # This container remains as fallback until migration is validated.
   # Both containers MUST NOT run with the same bot token simultaneously.
   discord-bot:
@@ -106,14 +106,14 @@ services:
     container_name: jarvis-discord-bot
     restart: unless-stopped
     depends_on:
-      engram-cloud:
+      mnemo-cloud:
         condition: service_healthy
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
       ALLOWED_USER_IDS: ${DISCORD_USER_ID}
-      ENGRAM_URL: http://engram-cloud:8080
+      ENGRAM_URL: http://mnemo-cloud:8080
       ENGRAM_USER: ${ENGRAM_USER}
       ENGRAM_PASS: ${ENGRAM_PASS}
       ENGRAM_API_KEY: ${ENGRAM_API_KEY}

@@ -32,7 +32,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 
 | Subsystem | Role | Tech |
 |-----------|------|------|
-| **ATHENA** | Orchestrator — receives requests, reasons, delegates, responds | Go (engram server) |
+| **ATHENA** | Orchestrator — receives requests, reasons, delegates, responds | Go (mnemo server) |
 | **NEXUS** | Dashboard — web chat, task board, cost metrics, activity feed | Next.js |
 | **HERMES** | Discord bot — DM notifications, message routing | Go |
 | **PROMETHEUS** | Claude bridge — OpenCode serve sessions for code execution | OpenCode serve + Claude credentials |
@@ -43,7 +43,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 
 ### Infrastructure
 
-- Docker Compose (4 services: postgres, engram-cloud, dashboard, discord-bot)
+- Docker Compose (4 services: postgres, mnemo-cloud, dashboard, discord-bot)
 - 1Password for secrets management
 - systemd for OpenCode serve
 - Tailscale for network access (100.71.66.54)
@@ -186,7 +186,7 @@ JARVIS is not trying to replicate a human brain. It is a pragmatic system that b
 | Budget overrun | Medium | Medium | Model routing with auto-downgrade. Real-time cost tracking. Hard budget caps at 100%. |
 | Context window limits | Medium | Medium | Engram persistent memory. Skill-based context injection (load only what's needed). Task decomposition. |
 | RAM pressure (7.5GB) | Medium | Medium | Limit concurrent sub-agents to 2. Monitor with SENTINEL. Upgrade RAM if needed. |
-| Engram data loss | Low | High | Cloud sync (Postgres), .engram/ chunk export, periodic backup verification. |
+| Mnemo data loss | Low | High | Cloud sync (Postgres), .mnemo/ chunk export, periodic backup verification. |
 | LLM fails to select correct skill | Medium | Low | `always: true` for critical skills. `/skill-name` override. Logging to detect misses. |
 | Scope creep ("personal AI OS" is infinite) | High | Medium | Strict prioritization (P0-P3). MVP-first. Ship, measure, iterate. |
 

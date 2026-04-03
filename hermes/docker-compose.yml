@@ -13,7 +13,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
       ALLOWED_USER_IDS: ${ALLOWED_USER_IDS}
-      ENGRAM_URL: ${ENGRAM_URL:-http://engram-cloud:8080}
+      ENGRAM_URL: ${ENGRAM_URL:-http://mnemo-cloud:8080}
       ENGRAM_USER: ${ENGRAM_USER:-mx}
       ENGRAM_PASS: ${ENGRAM_PASS}
       OPENCODE_SERVER_URL: ${OPENCODE_SERVER_URL:-http://host.docker.internal:4096}

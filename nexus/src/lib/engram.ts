@@ -11,7 +11,7 @@ export async function engramFetch<T>(path: string, init?: RequestInit): Promise<
     },
     next: { revalidate: 30 },
   });
-  if (!res.ok) throw new Error(`Engram API ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`Mnemo API ${res.status}: ${await res.text()}`);
   return res.json();
 }
 

@@ -17,7 +17,7 @@ JARVIS is a multi-component AI agent that receives requests via web dashboard or
 | **ATLAS**    | Skill registry + loader     | Go (in ATHENA) |
 | **MORPHEUS** | Memory consolidation        | Go (in ATHENA) |
 | **SENTINEL** | Health monitoring           | Go (in ATHENA) |
-| **MNEMO**    | Persistent memory (engram)  | Go (in ATHENA) |
+| **MNEMO**    | Persistent memory (mnemo)  | Go (in ATHENA) |
 
 ### High-Level Data Flow
 
@@ -71,7 +71,7 @@ Web dashboard for chatting with JARVIS and viewing tasks/memory.
 - **Stack**: Next.js 14, React 18, TypeScript
 - **Port**: 3001 (bound to Tailscale IP 100.71.66.54)
 - **Key deps**: cytoscape (graph viz), react-markdown
-- **Connects to**: ATHENA API at `http://engram-cloud:8080` (Docker internal)
+- **Connects to**: ATHENA API at `http://mnemo-cloud:8080` (Docker internal)
 - **Mounts**: personal-knowledgebase at `/kb` (read-only)
 
 ### HERMES (hermes/)
@@ -81,7 +81,7 @@ Discord bot -- DM interface to JARVIS.
 - **Stack**: Go, discordgo
 - **Key packages**: `internal/agent/`, `internal/discord/`, `internal/session/`, `internal/observability/`
 - **Port**: 9090 (metrics, localhost only)
-- **Connects to**: ATHENA API at `http://engram-cloud:8080`
+- **Connects to**: ATHENA API at `http://mnemo-cloud:8080`
 - **Security**: `ALLOWED_USER_IDS` restricts to owner only
 
 ### PROMETHEUS (athena/internal/prometheus/)
@@ -193,8 +193,8 @@ Instructions for the LLM...
 | `complete_task`   | Mark a task done                     |
 | `delegate`        | Async delegation to PROMETHEUS worker|
 | `notify`          | Send Discord DM via HERMES           |
-| `search_memory`   | Search MNEMO (engram) for knowledge  |
-| `save_memory`     | Save knowledge to MNEMO (engram)     |
+| `search_memory`   | Search MNEMO (mnemo) for knowledge  |
+| `save_memory`     | Save knowledge to MNEMO (mnemo)     |
 
 ### Tool Interface
 
@@ -254,22 +254,22 @@ Background process that runs "dream cycles" -- consolidates, deduplicates, and s
 | Service          | Container              | Image/Build    | Port                    |
 |------------------|------------------------|----------------|-------------------------|
 | `postgres`       | jarvis-postgres        | postgres:16    | 127.0.0.1:5432          |
-| `engram-cloud`   | jarvis-engram-cloud    | athena/        | 100.71.66.54:8080       |
+| `mnemo-cloud`   | jarvis-mnemo-cloud    | athena/        | 100.71.66.54:8080       |
 | `dashboard`      | jarvis-dashboard       | nexus/         | 100.71.66.54:3001       |
 | `discord-bot`    | jarvis-discord-bot     | hermes/        | 127.0.0.1:9090 (metrics)|
 
 ### Networking
 
 - **Tailscale**: services bound to `100.71.66.54` (homelab Tailscale IP)
-- **Docker internal**: services communicate via Docker DNS (`engram-cloud:8080`)
+- **Docker internal**: services communicate via Docker DNS (`mnemo-cloud:8080`)
 - **Host access**: `extra_hosts: host.docker.internal:host-gateway` for host services
-- **Volume mounts**: project dirs mounted into engram-cloud for native tool execution
+- **Volume mounts**: project dirs mounted into mnemo-cloud for native tool execution
 
 ### Health Checks
 
 All services have health checks with restart policy `unless-stopped`:
 - postgres: `pg_isready`
-- engram-cloud: `wget http://localhost:8080/health`
+- mnemo-cloud: `wget http://localhost:8080/health`
 - dashboard: Node.js fetch to `/`
 - SENTINEL: internal ticker checks every 15 min (server, DB, services)
 
@@ -354,9 +354,9 @@ jarvis-dashboard/
 ## 10. Decision Log
 
 - **SDD artifacts**: `~/personal-knowledgebase/docs/research/` -- spec-driven development docs
-- **Architecture decisions**: engram observations (search `project:jarvis-dashboard type:architecture`)
+- **Architecture decisions**: mnemo observations (search `project:jarvis-dashboard type:architecture`)
 - **Project narrative**: `~/personal-knowledgebase/docs/project-narratives/jarvis-story.md`
-- **Key decisions recorded in engram**:
+- **Key decisions recorded in mnemo**:
   - Skills architecture (SDD: jarvis-skills-architecture) -- 26 tasks, all complete
   - PROMETHEUS v2: native tool executor replacing OpenCode dependency
   - Docker Compose containerization

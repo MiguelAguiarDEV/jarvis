@@ -14,7 +14,7 @@ import (
 	"jarvis-discord-bot/internal/observability"
 )
 
-// dmConversation tracks the engram conversation for a DM channel.
+// dmConversation tracks the mnemo conversation for a DM channel.
 type dmConversation struct {
 	ConversationID int64
 	ChannelID      string
@@ -24,7 +24,7 @@ type dmConversation struct {
 }
 
 // DMRouter handles Discord DM messages by routing them to ATHENA via
-// the engram-cloud /api/chat SSE endpoint.
+// the mnemo-cloud /api/chat SSE endpoint.
 type DMRouter struct {
 	mu            sync.RWMutex
 	conversations map[string]*dmConversation // channelID -> conversation
@@ -98,7 +98,7 @@ func (d *DMRouter) HandleDM(s *discordgo.Session, m *discordgo.MessageCreate) bo
 	return true
 }
 
-// relayDM sends the DM to ATHENA via engram chat and posts the response.
+// relayDM sends the DM to ATHENA via mnemo chat and posts the response.
 func (d *DMRouter) relayDM(ctx context.Context, s *discordgo.Session, m *discordgo.MessageCreate) {
 	started := time.Now()
 	var relayErr error

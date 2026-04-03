@@ -55,7 +55,7 @@ echo '```' >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 echo "## Public URLs" >> "$OUTPUT"
 echo "- Dashboard: https://jarvis.miguelaguiar.dev" >> "$OUTPUT"
-echo "- Engram API: https://engram.miguelaguiar.dev" >> "$OUTPUT"
+echo "- Mnemo API: https://mnemo.miguelaguiar.dev" >> "$OUTPUT"
 echo "- Portfolio: https://miguelaguiar.dev" >> "$OUTPUT"
 
 echo "" >> "$OUTPUT"
@@ -73,7 +73,7 @@ echo "- Samba: \\\\\\\\$(tailscale ip -4 2>/dev/null || echo '100.71.66.54')\\\\
 
 echo "" >> "$OUTPUT"
 echo "## Secrets (1Password vault: Desarrollo)" >> "$OUTPUT"
-echo "- jarvis-engram-cloud: DB URL, JWT secret, cloud API key" >> "$OUTPUT"
+echo "- jarvis-mnemo-cloud: DB URL, JWT secret, cloud API key" >> "$OUTPUT"
 echo "- jarvis-dashboard: API URL, API key" >> "$OUTPUT"
 echo "- jarvis-discord-bot: bot token, user ID" >> "$OUTPUT"
 echo "- jarvis-opencode-server: server password" >> "$OUTPUT"

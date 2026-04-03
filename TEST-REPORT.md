@@ -10,7 +10,7 @@
 
 | Package | Status | Coverage | Time |
 |---------|--------|----------|------|
-| cmd/engram | PASS | 78.9% | 5.6s |
+| cmd/mnemo | PASS | 78.9% | 5.6s |
 | cmd/jarvis | PASS | 51.4% | 1.2s |
 | internal/athena | PASS | 82.3% | 2.0s |
 | internal/atlas | PASS | 93.6% | 0.01s |
@@ -55,14 +55,14 @@
 |-----------|-------|--------|
 | jarvis-dashboard | jarvis-dashboard-dashboard | Up, healthy |
 | jarvis-discord-bot | jarvis-dashboard-discord-bot | Up |
-| jarvis-engram-cloud | jarvis-dashboard-engram-cloud | Up, healthy (rebuilt with traces) |
+| jarvis-mnemo-cloud | jarvis-dashboard-mnemo-cloud | Up, healthy (rebuilt with traces) |
 | jarvis-postgres | postgres:16-alpine | Up, healthy |
 
 ## API Health
 
 | Endpoint | Status |
 |----------|--------|
-| GET /health (Athena) | PASS -- `{"service":"engram-cloud","status":"ok","version":"0.1.0"}` |
+| GET /health (Athena) | PASS -- `{"service":"mnemo-cloud","status":"ok","version":"0.1.0"}` |
 | GET / (Dashboard) | PASS -- HTML served, JARVIS UI loads |
 | Discord bot | PASS -- connected, commands registered (context, chat, end) |
 | GET /traces/stats | AUTH REQUIRED -- endpoint responds (1Password service account deleted, cannot authenticate) |
@@ -84,8 +84,8 @@
 | e2e-test.js | TIMEOUT | Hangs on chat test (Playwright + Claude API dependency) |
 
 ## Memory System
-- `engram search "JARVIS"` -- PASS (3 results returned)
-- `engram stats` -- PASS (2 sessions, 49 observations, 2 projects)
+- `mnemo search "JARVIS"` -- PASS (3 results returned)
+- `mnemo stats` -- PASS (2 sessions, 49 observations, 2 projects)
 
 ## Logging Audit
 

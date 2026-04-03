@@ -4,7 +4,7 @@ import os from "os";
 
 export const dynamic = "force-dynamic";
 
-// GET — proxy to engram for historical metrics
+// GET — proxy to mnemo for historical metrics
 export async function GET(req: NextRequest) {
   const limit = req.nextUrl.searchParams.get("limit") || "60";
   try {
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST — record current system metrics to engram
+// POST — record current system metrics to mnemo
 export async function POST() {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();

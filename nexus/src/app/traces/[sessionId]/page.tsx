@@ -69,7 +69,7 @@ export default async function SessionTracePage({
                     <span className="badge badge-muted">{tc.duration_ms}ms</span>
                   )}
                   {tc.is_engram && (
-                    <span className="badge badge-green">ENGRAM</span>
+                    <span className="badge badge-green">MNEMO</span>
                   )}
                 </summary>
                 <div className="trace-body">

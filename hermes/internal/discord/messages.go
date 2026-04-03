@@ -41,7 +41,7 @@ func MessageHandler(cfg *config.Config, mgr session.SessionManager, dmRouter *DM
 			return
 		}
 
-		// Route DMs to ATHENA via engram chat (before checking guild sessions).
+		// Route DMs to ATHENA via mnemo chat (before checking guild sessions).
 		if dmRouter != nil && dmRouter.HandleDM(s, m) {
 			return
 		}
