@@ -3,7 +3,7 @@
 > Last updated: 2026-04-03
 > Goal: JARVIS autónomo que no depende de OpenCode ni Claude Code para operar
 
-## Current State (~65% complete)
+## Current State (~75% complete)
 
 ### Done
 - [x] Orchestrator Go con tool system (18 tools, dispatcher, tool-call loop max 3)
@@ -27,7 +27,7 @@
 | 2 | Shell tool (bash) con guardrails | **DONE** | 3, 5 |
 | 3 | Search tools (grep, glob) | **DONE** | 5 |
 | 4 | Web tools (fetch_url, web_search) | fetch_url DONE, web_search pending | 5 |
-| 5 | Traces en todas las tools | Not started | 7 |
+| 5 | Traces en todas las tools | **DONE** (TracingDispatcher) | 7 |
 | 6 | Rewire chat para usar solo PROMETHEUS (no OpenCode) | Not started | 7 |
 | 7 | Eliminar OpenCode como dependencia para chat | Not started | — |
 
