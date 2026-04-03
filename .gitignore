@@ -13,6 +13,7 @@ node_modules/
 athena/engram
 athena/cmd/engram/main
 athena/cmd/engram/gentle-creation
+athena/jarvis
 
 # Hermes binaries
 hermes/bot
