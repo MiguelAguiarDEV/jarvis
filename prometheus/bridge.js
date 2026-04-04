@@ -65,10 +65,11 @@ const server = createServer(async (req, res) => {
     // Tools are managed by the ATHENA orchestrator's own tool-call loop.
     // The bridge only handles text-in → text-out via claude-agent-sdk query().
 
-    // maxTurns=2: minimum for claude-agent-sdk (1=always fails).
-    // Claude responds with text (including [TOOL:name] markers).
-    // ATHENA's orchestrator handles tool execution, not the bridge.
-    const maxTurns = 2;
+    // maxTurns=5: Claude needs multiple turns to think + use tools + respond.
+    // claude-agent-sdk query() uses Claude Code's internal tools (Read, Bash, etc.)
+    // which is fine — Claude executes directly. ATHENA's [TOOL:name] markers are
+    // a fallback for tools Claude Code doesn't have (create_task, search_memory, etc.)
+    const maxTurns = request.maxTurns || 5;
     console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns}`);
 
     let responseText = '';
