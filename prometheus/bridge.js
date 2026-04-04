@@ -79,7 +79,13 @@ const server = createServer(async (req, res) => {
 
     for await (const msg of query({
       prompt: prompt.trim(),
-      options: { model, systemPrompt: systemPrompt || undefined, maxTurns }
+      options: {
+        model,
+        systemPrompt: systemPrompt || undefined,
+        maxTurns,
+        permissionMode: 'bypassPermissions',
+        allowDangerouslySkipPermissions: true,
+      }
     })) {
       if (msg.type === 'assistant') {
         for (const b of msg.message.content) {
