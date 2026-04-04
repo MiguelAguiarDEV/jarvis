@@ -65,7 +65,10 @@ const server = createServer(async (req, res) => {
     // Tools are managed by the ATHENA orchestrator's own tool-call loop.
     // The bridge only handles text-in → text-out via claude-agent-sdk query().
 
-    const maxTurns = request.maxTurns || 1; // default quick mode (1 turn)
+    // ALWAYS maxTurns=1: Claude must respond with text only (including [TOOL:name] markers).
+    // ATHENA's orchestrator handles tool execution, not the bridge.
+    // With maxTurns>1, Claude uses its internal tools (Read, Bash) and bypasses our orchestrator.
+    const maxTurns = 1;
     console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns}`);
 
     let responseText = '';

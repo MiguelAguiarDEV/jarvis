@@ -7,14 +7,21 @@ always: true
 # Server Guardrails
 
 ## REQUIRES explicit user confirmation
-- DROP/TRUNCATE/DELETE without WHERE
-- Stop Postgres container
-- Remove Docker volumes
+- DROP/TRUNCATE/DELETE on production database without WHERE
+- Stop jarvis-postgres (the main DB)
+- Remove named Docker volumes (data loss)
 - Modify 1Password secrets
-- Delete files in ~/projects/ or ~/services/
-- rm -rf any directory
+- rm -rf ~/projects/ or ~/services/ (top-level delete)
 - Change Cloudflare DNS
 - Modify firewall/SSH/sudo config
+
+## Does NOT need confirmation (user already asked = confirmation)
+- Remove orphan/temp Docker containers (docker rm -f)
+- Remove unnamed containers
+- Restart services
+- Clean /tmp files
+- Kill processes the user asked to kill
+- When user says "hazlo", "eliminalos", "ok", "dale" = confirmed
 
 ## ALWAYS safe
 - Read: files, logs, status
