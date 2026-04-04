@@ -69,7 +69,7 @@ const server = createServer(async (req, res) => {
     // claude-agent-sdk query() uses Claude Code's internal tools (Read, Bash, etc.)
     // which is fine — Claude executes directly. ATHENA's [TOOL:name] markers are
     // a fallback for tools Claude Code doesn't have (create_task, search_memory, etc.)
-    const maxTurns = request.maxTurns || 5;
+    const maxTurns = request.maxTurns || 20;
     console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns}`);
 
     let responseText = '';
