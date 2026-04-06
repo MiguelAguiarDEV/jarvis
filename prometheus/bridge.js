@@ -398,6 +398,10 @@ const server = createServer(async (req, res) => {
   let body = '';
   for await (const chunk of req) body += chunk;
 
+  // Detect SSE preference from Accept header
+  const acceptHeader = String(req.headers['accept'] || '');
+  const wantsSSE = acceptHeader.includes('text/event-stream');
+
   try {
     const request = JSON.parse(body);
     const model = MODELS[request.model] || 'opus';
@@ -423,12 +427,25 @@ const server = createServer(async (req, res) => {
     }
 
     const maxTurns = request.maxTurns || 100;
-    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns} | tools:${allTools.length}`);
+    console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns} | tools:${allTools.length} | sse:${wantsSSE}`);
+
+    // Setup SSE stream if requested
+    if (wantsSSE) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
+    }
 
     let responseText = '';
     let totalCost = 0;
     let inputTokens = 0;
     let outputTokens = 0;
+
+    // tool_use_id → tool name (so tool_result events can carry the name)
+    const toolNameByID = new Map();
 
     for await (const msg of query({
       prompt: prompt.trim(),
@@ -445,10 +462,45 @@ const server = createServer(async (req, res) => {
     })) {
       if (msg.type === 'assistant') {
         for (const b of msg.message.content) {
-          if (b.type === 'text') responseText += b.text;
+          if (b.type === 'text') {
+            responseText += b.text;
+            if (wantsSSE) {
+              sseWrite(res, 'text', { text: b.text });
+              console.debug(`[bridge] sse text len=${b.text.length}`);
+            }
+          } else if (b.type === 'tool_use') {
+            toolNameByID.set(b.id, b.name);
+            if (wantsSSE) {
+              sseWrite(res, 'tool_start', { id: b.id, tool: b.name, input: b.input });
+              console.debug(`[bridge] sse tool_start ${b.name} id=${b.id}`);
+            }
+          }
         }
-      }
-      if (msg.type === 'result' && msg.subtype === 'success') {
+      } else if (msg.type === 'user') {
+        // tool results come back as a user message with tool_result blocks
+        const content = msg.message?.content;
+        if (Array.isArray(content)) {
+          for (const b of content) {
+            if (b.type === 'tool_result') {
+              const toolName = toolNameByID.get(b.tool_use_id) || '';
+              if (wantsSSE) {
+                // content can be a string or array of blocks; stringify safely
+                let resultContent = b.content;
+                if (Array.isArray(resultContent)) {
+                  resultContent = resultContent.map(c => c.text || JSON.stringify(c)).join('');
+                }
+                sseWrite(res, 'tool_result', {
+                  tool_use_id: b.tool_use_id,
+                  tool: toolName,
+                  content: typeof resultContent === 'string' ? resultContent : JSON.stringify(resultContent),
+                  is_error: !!b.is_error,
+                });
+                console.debug(`[bridge] sse tool_result ${toolName} err=${!!b.is_error}`);
+              }
+            }
+          }
+        }
+      } else if (msg.type === 'result' && msg.subtype === 'success') {
         totalCost = msg.total_cost_usd || 0;
         inputTokens = msg.total_input_tokens || 0;
         outputTokens = msg.total_output_tokens || 0;
@@ -457,7 +509,19 @@ const server = createServer(async (req, res) => {
 
     console.log(`[bridge] done: ${responseText.length}c | $${totalCost.toFixed(4)} | ${inputTokens}/${outputTokens}tok`);
 
-    // Build Anthropic Messages API format response (text only — no tool_use parsing needed)
+    if (wantsSSE) {
+      sseWrite(res, 'done', {
+        text: responseText,
+        usage: { input_tokens: inputTokens, output_tokens: outputTokens },
+        cost: totalCost,
+        model: request.model || 'claude-opus-4-6',
+      });
+      console.debug('[bridge] sse done');
+      res.end();
+      return;
+    }
+
+    // Backward-compat: non-SSE clients get JSON response
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       id: `msg_${Date.now()}`,
@@ -471,10 +535,36 @@ const server = createServer(async (req, res) => {
 
   } catch (error) {
     console.error('[bridge] error:', error.message);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ type: 'error', error: { type: 'bridge_error', message: error.message } }));
+    if (wantsSSE && !res.headersSent) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+    }
+    if (wantsSSE) {
+      try {
+        sseWrite(res, 'error', { message: error.message });
+      } catch (_) { /* socket may be closed */ }
+      res.end();
+    } else {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ type: 'error', error: { type: 'bridge_error', message: error.message } }));
+    }
   }
 });
+
+// ---------------------------------------------------------------------------
+// SSE helper
+// ---------------------------------------------------------------------------
+function sseWrite(res, event, data) {
+  try {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  } catch (e) {
+    console.warn(`[bridge] sse write error: ${e.message}`);
+  }
+}
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[bridge] PROMETHEUS v3 bridge on 0.0.0.0:${PORT}`);
