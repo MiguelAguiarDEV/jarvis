@@ -422,7 +422,7 @@ const server = createServer(async (req, res) => {
       else if (msg.role === 'system') systemPrompt += '\n' + content;
     }
 
-    const maxTurns = request.maxTurns || 20;
+    const maxTurns = request.maxTurns || 50;
     console.log(`[bridge] ${model} | msgs:${request.messages?.length||0} | maxTurns:${maxTurns} | tools:${allTools.length}`);
 
     let responseText = '';
