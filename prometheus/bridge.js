@@ -58,6 +58,139 @@ let LATEST_MODEL_USAGE = null;         // Record<model, ModelUsage>
 let LATEST_PERMISSION_DENIALS = null;  // SDKPermissionDenial[]
 let LATEST_RESULT_AT = null;           // ISO timestamp of last result message
 
+// ---------------------------------------------------------------------------
+// WINDOW_USAGE — accumulates modelUsage across ALL requests inside the current
+// 5h rate-limit window. Resets when rate_limit.resetsAt changes. Persisted to
+// /tmp/prometheus-window-usage.json so a bridge restart doesn't lose data.
+// ---------------------------------------------------------------------------
+const WINDOW_USAGE_FILE = '/tmp/prometheus-window-usage.json';
+
+let WINDOW_USAGE = {
+  window_started_at: null,     // unix ms, first request of the window
+  window_resets_at: null,      // unix ms, from rate_limit.resetsAt * 1000
+  requests: 0,
+  by_model: {},                // model -> { inputTokens, outputTokens, cacheRead, cacheCreation, costUSD, requests }
+  total_cost_usd: 0,
+};
+
+function persistWindowUsage() {
+  try {
+    writeFileSync(WINDOW_USAGE_FILE, JSON.stringify(WINDOW_USAGE, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn(`[bridge] persistWindowUsage error: ${e.message}`);
+  }
+}
+
+function loadWindowUsage() {
+  try {
+    if (!existsSync(WINDOW_USAGE_FILE)) return;
+    const raw = readFileSync(WINDOW_USAGE_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    // Only restore if the window hasn't already expired
+    if (parsed.window_resets_at && parsed.window_resets_at > Date.now()) {
+      WINDOW_USAGE = parsed;
+      console.log(`[bridge] window usage restored: reqs=${WINDOW_USAGE.requests} resets=${new Date(WINDOW_USAGE.window_resets_at).toISOString()}`);
+    } else {
+      console.log('[bridge] persisted window usage expired, starting fresh');
+    }
+  } catch (e) {
+    console.warn(`[bridge] loadWindowUsage error: ${e.message}`);
+  }
+}
+
+loadWindowUsage();
+
+// accumulateWindowUsage — call on each result message with modelUsage.
+// Handles window reset when rate_limit.resetsAt changes.
+function accumulateWindowUsage(modelUsage, totalCostUSD) {
+  if (!modelUsage) return;
+
+  const newResetsAt = LATEST_RATE_LIMIT && LATEST_RATE_LIMIT.resetsAt
+    ? LATEST_RATE_LIMIT.resetsAt * 1000
+    : null;
+
+  // Reset window if:
+  // - window was never started, OR
+  // - rate_limit.resetsAt changed (new window from the SDK), OR
+  // - window_resets_at has passed
+  const now = Date.now();
+  const needReset =
+    !WINDOW_USAGE.window_started_at ||
+    (newResetsAt && WINDOW_USAGE.window_resets_at !== newResetsAt) ||
+    (WINDOW_USAGE.window_resets_at && WINDOW_USAGE.window_resets_at < now);
+
+  if (needReset) {
+    WINDOW_USAGE = {
+      window_started_at: now,
+      window_resets_at: newResetsAt, // may be null if no rate_limit event seen yet
+      requests: 0,
+      by_model: {},
+      total_cost_usd: 0,
+    };
+  }
+
+  // If we didn't reset but we now have a resetsAt and previously didn't, fill it in
+  if (!WINDOW_USAGE.window_resets_at && newResetsAt) {
+    WINDOW_USAGE.window_resets_at = newResetsAt;
+  }
+
+  WINDOW_USAGE.requests++;
+  for (const [model, usage] of Object.entries(modelUsage)) {
+    if (!WINDOW_USAGE.by_model[model]) {
+      WINDOW_USAGE.by_model[model] = {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadInputTokens: 0,
+        cacheCreationInputTokens: 0,
+        costUSD: 0,
+        requests: 0,
+      };
+    }
+    const m = WINDOW_USAGE.by_model[model];
+    m.inputTokens += usage.inputTokens || 0;
+    m.outputTokens += usage.outputTokens || 0;
+    m.cacheReadInputTokens += usage.cacheReadInputTokens || 0;
+    m.cacheCreationInputTokens += usage.cacheCreationInputTokens || 0;
+    m.costUSD += usage.costUSD || 0;
+    m.requests++;
+  }
+  WINDOW_USAGE.total_cost_usd += totalCostUSD || 0;
+
+  persistWindowUsage();
+}
+
+// buildWindowUsageResponse — computes the public view of window usage including
+// totals and time-until-reset.
+function buildWindowUsageResponse() {
+  if (!WINDOW_USAGE.window_started_at) return null;
+
+  const now = Date.now();
+  const secondsUntilReset = WINDOW_USAGE.window_resets_at
+    ? Math.max(0, Math.floor((WINDOW_USAGE.window_resets_at - now) / 1000))
+    : 0;
+
+  let totalTokens = 0;
+  const byModel = {};
+  for (const [model, m] of Object.entries(WINDOW_USAGE.by_model)) {
+    const t = (m.inputTokens || 0) + (m.outputTokens || 0) +
+              (m.cacheReadInputTokens || 0) + (m.cacheCreationInputTokens || 0);
+    totalTokens += t;
+    byModel[model] = { ...m, totalTokens: t };
+  }
+
+  return {
+    started_at: new Date(WINDOW_USAGE.window_started_at).toISOString(),
+    resets_at: WINDOW_USAGE.window_resets_at
+      ? new Date(WINDOW_USAGE.window_resets_at).toISOString()
+      : null,
+    seconds_until_reset: secondsUntilReset,
+    requests: WINDOW_USAGE.requests,
+    total_cost_usd: WINDOW_USAGE.total_cost_usd,
+    total_tokens: totalTokens,
+    by_model: byModel,
+  };
+}
+
 const MODELS = {
   'claude-opus-4-6': 'opus',
   'claude-sonnet-4-6': 'sonnet',
@@ -428,6 +561,7 @@ const server = createServer(async (req, res) => {
       model_usage_last_request: LATEST_MODEL_USAGE,
       permission_denials_last_request: LATEST_PERMISSION_DENIALS,
       last_result_at: LATEST_RESULT_AT,
+      window_usage: buildWindowUsageResponse(),
     }));
     return;
   }
@@ -684,6 +818,8 @@ const server = createServer(async (req, res) => {
         LATEST_MODEL_USAGE = msg.modelUsage || null;
         LATEST_PERMISSION_DENIALS = msg.permission_denials || null;
         LATEST_RESULT_AT = new Date().toISOString();
+        // Accumulate into the current window (persisted to /tmp/prometheus-window-usage.json)
+        accumulateWindowUsage(msg.modelUsage, msg.total_cost_usd);
       }
     }
 
