@@ -199,7 +199,10 @@ const fetchUrlTool = tool(
   {
     url: z.string().describe('URL to fetch'),
     method: z.string().optional().describe('HTTP method (default: GET)'),
-    headers: z.record(z.string()).optional().describe('Request headers'),
+    // Zod v4 requires the two-arg form `z.record(keyType, valueType)`. The single-arg
+    // form `z.record(z.string())` is invalid in v4 and causes the SDK to silently
+    // drop the ENTIRE jarvis MCP server (init.tools=[], no jarvis tools registered).
+    headers: z.record(z.string(), z.string()).optional().describe('Request headers'),
     body: z.string().optional().describe('Request body'),
   },
   async ({ url, method, headers, body }) => {
@@ -372,7 +375,11 @@ function makeJarvisServer() {
   });
 }
 
-console.log(`[bridge] ${allTools.length} MCP tools defined`);
+// MCP tool names as exposed to Claude follow the format: mcp__<server>__<tool>
+// We derive them from allTools so the whitelist stays in sync with the definitions.
+const JARVIS_TOOL_NAMES = allTools.map((t) => `mcp__jarvis__${t.name}`);
+
+console.log(`[bridge] ${allTools.length} MCP tools defined: ${JARVIS_TOOL_NAMES.join(', ')}`);
 
 // ---------------------------------------------------------------------------
 // HTTP Server
@@ -447,19 +454,132 @@ const server = createServer(async (req, res) => {
     // tool_use_id → tool name (so tool_result events can carry the name)
     const toolNameByID = new Map();
 
+    // STRATEGY: positive whitelist via `tools: []` + `allowedTools: JARVIS_TOOL_NAMES`.
+    //
+    // Why not `disallowedTools` only:
+    //   The SDK silently inherits the user's Claude.ai MCP integrations (Cloudflare,
+    //   Vercel, Gmail, Calendar, Excalidraw, etc.) and `disallowedTools` does NOT
+    //   filter them out at the model layer — Claude still sees them in its tool list
+    //   and prefers them over our jarvis tools because they have richer descriptions.
+    //   Verified empirically: with disallowedTools alone, Claude called
+    //   `mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation`
+    //   instead of any `mcp__jarvis__*` tool.
+    //
+    // The fix:
+    //   1. `tools: []`           → disable ALL Claude Code built-in tools (Bash, Read, ...)
+    //   2. `allowedTools: [...]` → restrict tool calls to ONLY our 14 jarvis MCP tools
+    //   3. `disallowedTools`     → kept as belt-and-suspenders against any leakage
+    //
+    // CLAUDE_CODE_BUILTINS is retained as a defensive blacklist; the real enforcement
+    // is `tools: []` + `allowedTools: JARVIS_TOOL_NAMES`.
+    const CLAUDE_CODE_BUILTINS = [
+      // Built-in CC tools
+      'Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep',
+      'WebFetch', 'WebSearch', 'Task', 'NotebookEdit',
+      'TodoWrite', 'Agent', 'Skill', 'BashOutput', 'KillShell',
+      'SlashCommand', 'ExitPlanMode', 'ToolSearch', 'AskUserQuestion',
+      'EnterPlanMode', 'EnterWorktree', 'ExitWorktree',
+      'CronCreate', 'CronDelete', 'CronList', 'CronUpdate',
+      'TaskCreate', 'TaskGet', 'TaskList', 'TaskOutput', 'TaskStop', 'TaskUpdate',
+      'RemoteTrigger', 'ListMcpResourcesTool', 'ReadMcpResourceTool',
+      // Claude.ai MCP integrations (inherited from user's Claude account)
+      'mcp__claude_ai_Cloudflare_Developer_Platform__accounts_list',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_create',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_delete',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_get',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__d1_database_query',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__d1_databases_list',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__hyperdrive_config_delete',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__hyperdrive_config_edit',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__hyperdrive_config_get',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__hyperdrive_configs_list',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__kv_namespace_create',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__kv_namespace_delete',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__kv_namespace_get',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__kv_namespace_update',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__kv_namespaces_list',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__migrate_pages_to_workers_guide',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_create',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_delete',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_get',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__r2_buckets_list',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__set_active_account',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__workers_get_worker',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__workers_get_worker_code',
+      'mcp__claude_ai_Cloudflare_Developer_Platform__workers_list',
+      'mcp__claude_ai_Excalidraw__create_view',
+      'mcp__claude_ai_Excalidraw__export_to_excalidraw',
+      'mcp__claude_ai_Excalidraw__read_checkpoint',
+      'mcp__claude_ai_Excalidraw__read_me',
+      'mcp__claude_ai_Excalidraw__save_checkpoint',
+      'mcp__claude_ai_Figma_2__authenticate',
+      'mcp__claude_ai_Figma__authenticate',
+      'mcp__claude_ai_Gmail__gmail_create_draft',
+      'mcp__claude_ai_Gmail__gmail_get_profile',
+      'mcp__claude_ai_Gmail__gmail_list_drafts',
+      'mcp__claude_ai_Gmail__gmail_list_labels',
+      'mcp__claude_ai_Gmail__gmail_read_message',
+      'mcp__claude_ai_Gmail__gmail_read_thread',
+      'mcp__claude_ai_Gmail__gmail_search_messages',
+      'mcp__claude_ai_Google_Calendar__gcal_create_event',
+      'mcp__claude_ai_Google_Calendar__gcal_delete_event',
+      'mcp__claude_ai_Google_Calendar__gcal_find_meeting_times',
+      'mcp__claude_ai_Google_Calendar__gcal_find_my_free_time',
+      'mcp__claude_ai_Google_Calendar__gcal_get_event',
+      'mcp__claude_ai_Google_Calendar__gcal_list_calendars',
+      'mcp__claude_ai_Google_Calendar__gcal_list_events',
+      'mcp__claude_ai_Google_Calendar__gcal_respond_to_event',
+      'mcp__claude_ai_Google_Calendar__gcal_update_event',
+      'mcp__claude_ai_Notion__authenticate',
+      'mcp__claude_ai_Vercel__add_toolbar_reaction',
+      'mcp__claude_ai_Vercel__change_toolbar_thread_resolve_status',
+      'mcp__claude_ai_Vercel__check_domain_availability_and_price',
+      'mcp__claude_ai_Vercel__deploy_to_vercel',
+      'mcp__claude_ai_Vercel__edit_toolbar_message',
+      'mcp__claude_ai_Vercel__get_access_to_vercel_url',
+      'mcp__claude_ai_Vercel__get_deployment',
+      'mcp__claude_ai_Vercel__get_deployment_build_logs',
+      'mcp__claude_ai_Vercel__get_project',
+      'mcp__claude_ai_Vercel__get_runtime_logs',
+      'mcp__claude_ai_Vercel__get_toolbar_thread',
+      'mcp__claude_ai_Vercel__list_deployments',
+      'mcp__claude_ai_Vercel__list_projects',
+      'mcp__claude_ai_Vercel__list_teams',
+      'mcp__claude_ai_Vercel__list_toolbar_threads',
+      'mcp__claude_ai_Vercel__reply_to_toolbar_thread',
+      'mcp__claude_ai_Vercel__search_vercel_documentation',
+      'mcp__claude_ai_Vercel__web_fetch_vercel_url',
+    ];
+
     for await (const msg of query({
       prompt: prompt.trim(),
       options: {
         model,
         systemPrompt: systemPrompt || undefined,
         maxTurns,
-        // Keep Claude Code built-in tools (Bash, Read, etc.) + add our MCP tools
-        // tools: [] was blocking MCP tools too. Let Claude use both.
+        // We rely ONLY on disallowedTools to block Claude Code built-ins.
+        // allowedTools is intentionally NOT set: empirically it filters MCP tools
+        // out of the model's tool list (init.tools=[]) and Claude hallucinates
+        // <function_calls> XML in plain text.
+        disallowedTools: CLAUDE_CODE_BUILTINS,
         mcpServers: { 'jarvis': makeJarvisServer() },
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
       }
     })) {
+      // Diagnostics: confirm jarvis MCP tools are registered. If jarvisCount is 0
+      // when total>0, the SDK likely failed to register one of our tools (often a
+      // schema issue). If everything is 0, the SDK is treating us as a constrained
+      // session — check the cwd and CLAUDE_CONFIG_DIR.
+      if (msg.type === 'system' && msg.subtype === 'init') {
+        const toolsList = msg.tools || [];
+        const jarvisCount = toolsList.filter((t) => t.startsWith('mcp__jarvis__')).length;
+        console.log(`[bridge] init: total=${toolsList.length} jarvis=${jarvisCount}`);
+        if (jarvisCount === 0) {
+          console.warn('[bridge] WARNING: 0 jarvis tools registered. Check tool schemas (zod v4 requires z.record(key, val)).');
+        }
+      }
       if (msg.type === 'assistant') {
         for (const b of msg.message.content) {
           if (b.type === 'text') {
@@ -470,6 +590,11 @@ const server = createServer(async (req, res) => {
             }
           } else if (b.type === 'tool_use') {
             toolNameByID.set(b.id, b.name);
+            // Instrumentation: log every tool Claude wants to use, with origin.
+            // mcp__jarvis__* = our MCP tools (controlled by ATHENA dispatcher)
+            // anything else = Claude Code built-in (we want zero of these)
+            const origin = b.name.startsWith('mcp__jarvis__') ? 'MCP' : 'CLAUDE_CODE';
+            console.log(`[bridge] tool_use origin=${origin} name=${b.name} id=${b.id}`);
             if (wantsSSE) {
               sseWrite(res, 'tool_start', { id: b.id, tool: b.name, input: b.input });
               console.debug(`[bridge] sse tool_start ${b.name} id=${b.id}`);
