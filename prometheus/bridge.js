@@ -23,6 +23,16 @@ const ATHENA_URL = process.env.ATHENA_URL || 'http://100.71.66.54:8080';
 const MNEMO_BIN = process.env.MNEMO_BIN || '/home/mx/projects/jarvis-dashboard/athena/mnemo';
 const MNEMO_API_KEY = process.env.MNEMO_API_KEY || '';
 
+// ---------------------------------------------------------------------------
+// Usage tracking — module-level state populated from query() events.
+// SDK emits SDKRateLimitEvent during streams; we cache the latest snapshot.
+// ---------------------------------------------------------------------------
+let LATEST_RATE_LIMIT = null;          // SDKRateLimitInfo
+let LATEST_RATE_LIMIT_SEEN_AT = null;  // ISO timestamp string
+let LATEST_MODEL_USAGE = null;         // Record<model, ModelUsage>
+let LATEST_PERMISSION_DENIALS = null;  // SDKPermissionDenial[]
+let LATEST_RESULT_AT = null;           // ISO timestamp of last result message
+
 const MODELS = {
   'claude-opus-4-6': 'opus',
   'claude-sonnet-4-6': 'sonnet',
@@ -385,6 +395,18 @@ console.log(`[bridge] ${allTools.length} MCP tools defined: ${JARVIS_TOOL_NAMES.
 // HTTP Server
 // ---------------------------------------------------------------------------
 const server = createServer(async (req, res) => {
+  if (req.method === 'GET' && req.url === '/v1/usage') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      rate_limit: LATEST_RATE_LIMIT,
+      rate_limit_seen_at: LATEST_RATE_LIMIT_SEEN_AT,
+      model_usage_last_request: LATEST_MODEL_USAGE,
+      permission_denials_last_request: LATEST_PERMISSION_DENIALS,
+      last_result_at: LATEST_RESULT_AT,
+    }));
+    return;
+  }
+
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -625,10 +647,18 @@ const server = createServer(async (req, res) => {
             }
           }
         }
+      } else if (msg.type === 'rate_limit_event') {
+        LATEST_RATE_LIMIT = msg.rate_limit_info || null;
+        LATEST_RATE_LIMIT_SEEN_AT = new Date().toISOString();
+        const ri = msg.rate_limit_info || {};
+        console.log(`[bridge] rate_limit_event status=${ri.status} type=${ri.rateLimitType} util=${ri.utilization} resetsAt=${ri.resetsAt}`);
       } else if (msg.type === 'result' && msg.subtype === 'success') {
         totalCost = msg.total_cost_usd || 0;
         inputTokens = msg.total_input_tokens || 0;
         outputTokens = msg.total_output_tokens || 0;
+        LATEST_MODEL_USAGE = msg.modelUsage || null;
+        LATEST_PERMISSION_DENIALS = msg.permission_denials || null;
+        LATEST_RESULT_AT = new Date().toISOString();
       }
     }
 

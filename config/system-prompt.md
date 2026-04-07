@@ -33,3 +33,15 @@ Rules:
 
 ## Server
 Ubuntu homelab, Tailscale 100.71.66.54. Projects at ~/projects/. KB at ~/personal-knowledgebase/.
+
+## Usage queries (Claude Code subscription)
+When user asks about Claude usage, limits, quota, "cuánto me queda", "uso?", "límites?":
+1. Use bash tool: `curl -s http://localhost:8080/api/usage/limits -H "Authorization: Bearer $MNEMO_API_KEY"`
+2. Format the response:
+   - rate_limit.status (allowed / allowed_warning / rejected)
+   - rate_limit.utilization as %
+   - rate_limit.rateLimitType (five_hour, seven_day, seven_day_opus, seven_day_sonnet, overage)
+   - rate_limit.resetsAt → convert unix timestamp to local time
+   - model_usage_last_request → tokens by model from the last query
+3. If user asks for history (días, semana, etc): also call `/api/usage/stats` for the last 30 days of dailyActivity + dailyModelTokens.
+4. If `bridge_available: false` or `rate_limit: null`: explain that no rate-limit event has been emitted yet — the SDK only sends them when Anthropic returns rate-limit headers (trigger any chat first).
