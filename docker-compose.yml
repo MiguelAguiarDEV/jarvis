@@ -36,7 +36,7 @@ services:
       MNEMO_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/engram?sslmode=disable
       DISCORD_BOT_TOKEN: ${DISCORD_TOKEN}
       DISCORD_USER_ID: ${DISCORD_USER_ID}
-      JARVIS_DISCORD_ENABLED: ${JARVIS_DISCORD_ENABLED:-false}
+      JARVIS_DISCORD_ENABLED: ${JARVIS_DISCORD_ENABLED:-true}
       JARVIS_CONFIG_DIR: /config
       JARVIS_BUDGET_OPENAI: "200"
       JARVIS_BUDGET_CLAUDE: "200"
@@ -95,46 +95,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # NOTE: Discord is being migrated to ATHENA Gateway (Phase 3).
-  # When JARVIS_DISCORD_ENABLED=true on mnemo-cloud, ATHENA handles Discord.
-  # This container remains as fallback until migration is validated.
-  # Both containers MUST NOT run with the same bot token simultaneously.
-  discord-bot:
-    build:
-      context: ./hermes
-      dockerfile: Dockerfile
-    container_name: jarvis-discord-bot
-    restart: unless-stopped
-    depends_on:
-      mnemo-cloud:
-        condition: service_healthy
-    environment:
-      DISCORD_TOKEN: ${DISCORD_TOKEN}
-      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
-      DISCORD_USER_ID: ${DISCORD_USER_ID}
-      ALLOWED_USER_IDS: ${DISCORD_USER_ID}
-      MNEMO_URL: http://mnemo-cloud:8080
-      MNEMO_USER: ${MNEMO_USER}
-      MNEMO_PASS: ${MNEMO_PASS}
-      MNEMO_API_KEY: ${MNEMO_API_KEY}
-      OPENCODE_SERVER_URL: http://host.docker.internal:4096
-      OPENCODE_SERVER_PASSWORD: ${OPENCODE_SERVER_PASSWORD}
-      SESSION_FILE_PATH: /data/sessions.json
-      METRICS_ADDR: 0.0.0.0:9090
-      DIAGNOSTICS_DIR: /data/diagnostics
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - bot-data:/data
-    ports:
-      - "127.0.0.1:9090:9090"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   swagger:
     image: swaggerapi/swagger-ui
     container_name: jarvis-swagger
@@ -148,4 +108,3 @@ services:
 volumes:
   postgres_postgres_data:
     external: true
-  bot-data:
