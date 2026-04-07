@@ -9,11 +9,36 @@
  */
 
 import { createServer } from 'http';
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { execSync } from 'child_process';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { resolve, dirname } from 'path';
 import { query, tool, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod/v4';
+
+// Async exec — does NOT block the Node.js event loop.
+// Critical: execSync would freeze the entire bridge during long commands,
+// blocking concurrent requests and the /v1/usage endpoint while a tool runs.
+const execAsync = promisify(exec);
+
+// runCommand wraps execAsync with consistent options and error handling.
+// Returns stdout on success, or error message including stderr.
+async function runCommand(cmd, opts = {}) {
+  try {
+    const { stdout, stderr } = await execAsync(cmd, {
+      timeout: opts.timeout || 30000,
+      maxBuffer: opts.maxBuffer || 1024 * 1024,
+      encoding: 'utf-8',
+      ...opts,
+    });
+    return stdout;
+  } catch (err) {
+    // err.stdout/stderr available if command ran but returned non-zero
+    const stderr = err.stderr || '';
+    const stdout = err.stdout || '';
+    throw new Error(`exec failed (exit ${err.code || '?'}): ${stderr || stdout || err.message}`);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Config
@@ -95,7 +120,8 @@ const writeFileTool = tool(
   async ({ path: filePath, content }) => {
     try {
       const dir = dirname(filePath);
-      if (!existsSync(dir)) execSync(`mkdir -p "${dir}"`);
+      // Use Node fs.mkdirSync (fast, no shell exec) instead of execSync mkdir.
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
       writeFileSync(filePath, content, 'utf-8');
       return ok(`Written ${content.length} bytes to ${filePath}`);
     } catch (e) { return fail(`write_file error: ${e.message}`); }
@@ -132,18 +158,17 @@ const bashTool = tool(
   },
   async ({ command, cwd }) => {
     try {
-      const output = execSync(command, {
+      const { stdout, stderr } = await execAsync(command, {
         cwd: cwd || '/home/mx',
         timeout: 120_000,
         maxBuffer: 10 * 1024 * 1024,
         encoding: 'utf-8',
         shell: '/bin/bash',
-        stdio: ['pipe', 'pipe', 'pipe'],
       });
-      return ok(output || '(no output)');
+      return ok(stdout || stderr || '(no output)');
     } catch (e) {
       const out = (e.stdout || '') + (e.stderr || '');
-      return fail(`Exit ${e.status || 1}\n${out || e.message}`);
+      return fail(`Exit ${e.code || 1}\n${out || e.message}`);
     }
   }
 );
@@ -164,16 +189,16 @@ const grepTool = tool(
       if (globPattern) cmd += ` -g "${globPattern}"`;
       cmd += ` --max-count=${max_results || 50}`;
       cmd += ` ${searchPath || '.'}`;
-      const output = execSync(cmd, {
+      const { stdout } = await execAsync(cmd, {
         cwd: '/home/mx',
         timeout: 30_000,
         maxBuffer: 5 * 1024 * 1024,
         encoding: 'utf-8',
         shell: '/bin/bash',
       });
-      return ok(output || '(no matches)');
+      return ok(stdout || '(no matches)');
     } catch (e) {
-      if (e.status === 1) return ok('(no matches)');
+      if (e.code === 1) return ok('(no matches)');
       return fail(`grep error: ${e.message}`);
     }
   }
@@ -190,14 +215,14 @@ const globTool = tool(
     try {
       const base = basePath || '.';
       const cmd = `find ${base} -path "${pattern}" -type f 2>/dev/null | head -100`;
-      const output = execSync(cmd, {
+      const { stdout } = await execAsync(cmd, {
         cwd: '/home/mx',
         timeout: 15_000,
         maxBuffer: 2 * 1024 * 1024,
         encoding: 'utf-8',
         shell: '/bin/bash',
       });
-      return ok(output || '(no matches)');
+      return ok(stdout || '(no matches)');
     } catch (e) { return fail(`glob error: ${e.message}`); }
   }
 );
@@ -309,13 +334,13 @@ const searchMemoryTool = tool(
     try {
       let cmd = `${MNEMO_BIN} search "${q.replace(/"/g, '\\"')}"`;
       if (project) cmd += ` --project "${project}"`;
-      const output = execSync(cmd, {
+      const { stdout } = await execAsync(cmd, {
         timeout: 15_000,
         maxBuffer: 2 * 1024 * 1024,
         encoding: 'utf-8',
         env: { ...process.env, MNEMO_API_KEY },
       });
-      return ok(output || '(no results)');
+      return ok(stdout || '(no results)');
     } catch (e) { return fail(`search_memory error: ${e.stdout || e.stderr || e.message}`); }
   }
 );
@@ -334,13 +359,13 @@ const saveMemoryTool = tool(
       let cmd = `${MNEMO_BIN} save "${title.replace(/"/g, '\\"')}" "${content.replace(/"/g, '\\"')}"`;
       if (type) cmd += ` --type ${type}`;
       if (project) cmd += ` --project "${project}"`;
-      const output = execSync(cmd, {
+      const { stdout } = await execAsync(cmd, {
         timeout: 15_000,
         maxBuffer: 1024 * 1024,
         encoding: 'utf-8',
         env: { ...process.env, MNEMO_API_KEY },
       });
-      return ok(output || 'Saved.');
+      return ok(stdout || 'Saved.');
     } catch (e) { return fail(`save_memory error: ${e.stdout || e.stderr || e.message}`); }
   }
 );
